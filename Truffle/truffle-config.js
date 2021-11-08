@@ -19,7 +19,7 @@ module.exports = {
 			provider: () =>
 				new HDWalletProvider(
 					mnemonic,
-					"Moralis RPC Node",
+					`https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/ropsten`,
 				),
 			network_id: 3,
 			gas: 5500000,
@@ -27,38 +27,38 @@ module.exports = {
 			timeoutBlocks: 200,
 			skipDryRun: true,
 		},
-  },
-  kovan: {
-    provider: () =>
-      new HDWalletProvider(
-        mnemonic,
-        "Moralis RPC Node",
-      ),
-    network_id: 42,
-    gasPrice: 20000000000,
-    gas: 3716887,
-    skipDryRun: true,
-    networkCheckTimeout: 100000,
-  },
-  rinkeby: {
-    provider: () =>
-      new HDWalletProvider(
-        mnemonic,
-        "Moralis RPC Node",
-      ),
-    network_id: 4,
-    skipDryRun: true,
-  },
-  mainnet: {
-    provider: function () {
-      return new HDWalletProvider(
-        mnemonic,
-        "Moralis RPC Node",
-      );
+    kovan: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+            `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/kovan`,
+        ),
+      network_id: 42,
+      gasPrice: 20000000000,
+      gas: 3716887,
+      skipDryRun: true,
+      networkCheckTimeout: 100000,
     },
-    gas: 5000000,
-    gasPrice: 5e9,
-    network_id: 1,
+    rinkeby: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/rinkeby`,
+        ),
+      network_id: 4,
+      skipDryRun: true,
+    },
+    mainnet: {
+      provider: function () {
+        return new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/mainnet`,
+        );
+      },
+      gas: 5000000,
+      gasPrice: 5e9,
+      network_id: 1,
+    },
   },
   compilers: {
 		solc: {
