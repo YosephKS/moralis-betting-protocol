@@ -36,3 +36,6 @@ typechain
 
 # package
 package-lock.json
+
+# wallet mnemonic
+.secrets

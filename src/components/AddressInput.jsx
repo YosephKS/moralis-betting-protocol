@@ -8,9 +8,9 @@ function AddressInput(props) {
   const [address, setAddress] = useState("");
   const [validatedAddress, setValidatedAddress] = useState("");
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (validatedAddress) props.onChange(address);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
   const updateAddress = useCallback((address) => {

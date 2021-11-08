@@ -11,7 +11,6 @@ import NFTBalance from "components/NFTBalance";
 import Wallet from "components/Wallet";
 import { Menu, Layout } from "antd";
 import "antd/dist/antd.css";
-import Blockie from "components/Blockie";
 import NativeBalance from "components/NativeBalance";
 import "./style.css";
 import QuickStart from "components/QuickStart";
