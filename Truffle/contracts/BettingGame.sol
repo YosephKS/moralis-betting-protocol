@@ -76,9 +76,18 @@ contract BettingGame is Ownable, VRFConsumerBase {
    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
       address playerAddress = requestIdToAddressRegistry[requestId];
       playerBetRecordRegistry[playerAddress] = randomness % sides;
+
+      if (playerAddress == challenger) {
+         if ((playerBetRecordRegistry[creator] + playerBetRecordRegistry[challenger]) % 2 == 0) {
+            
+         } else {
+
+         }
+      }
    }
 
    function deposit() public {}
 
-   function withdraw() public {}
+   function withdraw() public {
+   }
 }

@@ -10,6 +10,9 @@ import "./IERC20Burnable.sol";
 contract BettingGameRegistry is Ownable, ChainlinkClient {
    using SafeMath for uint;
 
+   event BettingGameCreated(uint256 bettingGameId, address creator, uint256 sides, uint256 expiryTime);
+   event BettingGameChallengerRegistered(uint256 bettingGameId, address challenger);
+
    address public nativeTokenAddress;
    address internal vrfCoordinatorAddress;
    address internal linkTokenAddress;
@@ -86,7 +89,16 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
       existingGame.cancel();
    }
 
-   function playGame() public {}
+   function playGame(uint256 _bettingGameId) public onlyExistingGame(_bettingGameId) {
+      BettingGame existingGame = BettingGame(bettingGameDataRegistry[_bettingGameId]);
+      require(
+         existingGame.creator() == msg.sender || existingGame.challenger() == msg.sender,
+         "You cancel a game you didn't create!"
+      );
+
+      // Execute the internal `run` function
+      existingGame.play(msg.sender);
+   }
 
    function depositBettingAsset() public {}
 
