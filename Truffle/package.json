@@ -1,0 +1,11 @@
+{
+  "name": "moralis-betting-protocol-contracts",
+  "version": "1.0.0",
+  "main": "truffle-config.js",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@chainlink/contracts": "^0.2.2",
+    "@openzeppelin/contracts": "^4.3.2"
+  }
+}
