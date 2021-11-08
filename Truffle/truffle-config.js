@@ -1,10 +1,13 @@
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const fs = require("fs");
+const mnemonic = fs.readFileSync(".secret").toString().trim();
+require("dotenv").config();
+
 module.exports = {
-  // Uncommenting the defaults below
-  // provides for an easier quick-start with Ganache.
-  // You can also follow this format for other networks;
-  // see <http://truffleframework.com/docs/advanced/configuration>
-  // for more details on how to specify configuration options!
-  //
+  plugins: ["truffle-plugin-verify"],
+	api_keys: {
+		etherscan: process.env.ETHERSCAN_API_KEY,
+	},
   networks: {
     develop: {
       host: "127.0.0.1",
@@ -12,26 +15,60 @@ module.exports = {
       chainId: 1337,
       network_id: 1337,
     },
+    ropsten: {
+			provider: () =>
+				new HDWalletProvider(
+					mnemonic,
+					"Moralis RPC Node",
+				),
+			network_id: 3,
+			gas: 5500000,
+			confirmations: 2,
+			timeoutBlocks: 200,
+			skipDryRun: true,
+		},
   },
-  //
-  // Truffle DB is currently disabled by default; to enable it, change enabled:
-  // false to enabled: true. The default storage location can also be
-  // overridden by specifying the adapter settings, as shown in the commented code below.
-  //
-  // NOTE: It is not possible to migrate your contracts to truffle DB and you should
-  // make a backup of your artifacts to a safe location before enabling this feature.
-  //
-  // After you backed up your artifacts you can utilize db by running migrate as follows:
-  // $ truffle migrate --reset --compile-all
-  //
-  // db: {
-  //   enabled: true,
-  //   host: "127.0.0.1",
-  //   adapter: {
-  //     name: "sqlite",
-  //     settings: {
-  //       directory: ".db",
-  //     },
-  //   },
-  // },
+  kovan: {
+    provider: () =>
+      new HDWalletProvider(
+        mnemonic,
+        "Moralis RPC Node",
+      ),
+    network_id: 42,
+    gasPrice: 20000000000,
+    gas: 3716887,
+    skipDryRun: true,
+    networkCheckTimeout: 100000,
+  },
+  rinkeby: {
+    provider: () =>
+      new HDWalletProvider(
+        mnemonic,
+        "Moralis RPC Node",
+      ),
+    network_id: 4,
+    skipDryRun: true,
+  },
+  mainnet: {
+    provider: function () {
+      return new HDWalletProvider(
+        mnemonic,
+        "Moralis RPC Node",
+      );
+    },
+    gas: 5000000,
+    gasPrice: 5e9,
+    network_id: 1,
+  },
+  compilers: {
+		solc: {
+			version: "0.8.9",
+			settings: {
+				optimizer: {
+					enabled: false,
+					runs: 200,
+				},
+			},
+		},
+	},
 };

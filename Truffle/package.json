@@ -12,5 +12,9 @@
     "compile": "truffle compile",
     "deploy": "truffle deploy",
     "test": "truffle test"
+  },
+  "devDependencies": {
+    "truffle-plugin-verify": "^0.5.17",
+    "@truffle/hdwallet-provider": "^1.6.0"
   }
 }
