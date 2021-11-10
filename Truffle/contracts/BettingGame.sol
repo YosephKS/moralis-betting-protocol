@@ -3,12 +3,14 @@ pragma solidity >=0.4.17 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
-import "./IERC20Burnable.sol";
+import "./interfaces/IERC20Burnable.sol";
 
 contract BettingGame is Ownable, VRFConsumerBase {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     enum BettingGameStatus {
         OPEN,
@@ -18,6 +20,11 @@ contract BettingGame is Ownable, VRFConsumerBase {
     struct DepositBalance {
         uint256 amount;
         address tokenAddress;
+    }
+
+    struct DepositMetadata {
+        mapping(uint256 => DepositBalance) balance;
+        uint256 balanceCount;
     }
 
     bytes32 internal keyHash;
@@ -31,7 +38,7 @@ contract BettingGame is Ownable, VRFConsumerBase {
 
     mapping(bytes32 => address) requestIdToAddressRegistry;
     mapping(address => uint256) playerBetRecordRegistry;
-    mapping(address => DepositBalance[]) public depositBalanceRegistry;
+    mapping(address => DepositMetadata) public depositBalanceRegistry;
 
     constructor(
         address _vrfCoordinatorAddress,
@@ -144,20 +151,101 @@ contract BettingGame is Ownable, VRFConsumerBase {
         address playerAddress = requestIdToAddressRegistry[requestId];
         playerBetRecordRegistry[playerAddress] = randomness % sides;
 
+        // Resolving the winner/loser
         if (playerAddress == challenger) {
             if (
                 (playerBetRecordRegistry[creator] +
                     playerBetRecordRegistry[challenger]) %
                     2 ==
                 0
-            ) {} else {}
+            ) {
+                for (
+                    uint256 i = 0;
+                    i < depositBalanceRegistry[challenger].balanceCount;
+                    i++
+                ) {
+                    uint256 creatorBalanceCount = depositBalanceRegistry[
+                        creator
+                    ].balanceCount;
+                    uint256 challengerBalanceCount = depositBalanceRegistry[
+                        challenger
+                    ].balanceCount;
+                    uint256 challengerTokenAmount = depositBalanceRegistry[
+                        challenger
+                    ].balance[i].amount;
+                    address challengerTokenAddress = depositBalanceRegistry[
+                        challenger
+                    ].balance[i].tokenAddress;
+
+                    // 1. Creator Wins
+                    depositBalanceRegistry[creator].balance[
+                        creatorBalanceCount
+                    ] = DepositBalance(
+                        challengerTokenAmount,
+                        challengerTokenAddress
+                    );
+                    depositBalanceRegistry[creator].balanceCount = SafeMath.add(
+                        creatorBalanceCount,
+                        1
+                    );
+
+                    // 2. Challenger Lose
+                    depositBalanceRegistry[challenger].balance[
+                            SafeMath.sub(challengerBalanceCount, 1)
+                        ] = DepositBalance(0, address(0));
+                    depositBalanceRegistry[challenger].balanceCount = SafeMath
+                        .sub(challengerBalanceCount, 1);
+                }
+            } else {
+                for (
+                    uint256 i = 0;
+                    i < depositBalanceRegistry[challenger].balanceCount;
+                    i++
+                ) {
+                    uint256 challengerBalanceCount = depositBalanceRegistry[
+                        challenger
+                    ].balanceCount;
+                    uint256 creatorBalanceCount = depositBalanceRegistry[
+                        creator
+                    ].balanceCount;
+                    uint256 creatorTokenAmount = depositBalanceRegistry[creator]
+                        .balance[i]
+                        .amount;
+                    address creatorTokenAddress = depositBalanceRegistry[
+                        creator
+                    ].balance[i].tokenAddress;
+
+                    // 1. Challenger Wins
+                    depositBalanceRegistry[challenger].balance[
+                            challengerBalanceCount
+                        ] = DepositBalance(
+                        creatorTokenAmount,
+                        creatorTokenAddress
+                    );
+                    depositBalanceRegistry[challenger].balanceCount = SafeMath
+                        .add(challengerBalanceCount, 1);
+
+                    // 2. Challenger Lose
+                    depositBalanceRegistry[creator].balance[
+                        SafeMath.sub(creatorBalanceCount, 1)
+                    ] = DepositBalance(0, address(0));
+                    depositBalanceRegistry[creator].balanceCount = SafeMath.sub(
+                        creatorBalanceCount,
+                        1
+                    );
+                }
+            }
         }
     }
 
     /**
      * Handle depositing ERC20 token to the `BettingGame` contract
      */
-    function deposit(address _msgSend, address _tokenAddress)
+    function deposit(
+        address _msgSend,
+        address _tokenAddress,
+        uint256 _price
+    )
         public
         onlyOwner
         onlyCreatorAndChallenger(_msgSend)
@@ -165,13 +253,20 @@ contract BettingGame is Ownable, VRFConsumerBase {
     {
         // 1. Transfer ERC20 token from user to the `BettingGame` contract
         IERC20 token = IERC20(_tokenAddress);
-        token.approve(address(this), token.balanceOf(_msgSend));
-        token.transferFrom(_msgSend, address(this), 0);
+        uint256 tokenAmount = SafeMath.div(SafeMath.mul(_price, sides), 100);
+        token.safeApprove(address(this), token.balanceOf(_msgSend));
+        token.safeTransferFrom(_msgSend, address(this), tokenAmount);
 
         // 2. Register deposit data to `depositBalanceRegistry` mapping
-        //   DepositBalance[] memory depositArray = new DepositBalance[](1);
-        //   depositArray[0] = DepositBalance(0, _tokenAddress);
-        //   depositBalanceRegistry[_msgSend] = [DepositBalance(0, _tokenAddress)];
+        uint256 balanceCount = depositBalanceRegistry[_msgSend].balanceCount;
+        depositBalanceRegistry[_msgSend].balance[balanceCount] = DepositBalance(
+            tokenAmount,
+            _tokenAddress
+        );
+        depositBalanceRegistry[_msgSend].balanceCount = SafeMath.add(
+            balanceCount,
+            1
+        );
     }
 
     /**
@@ -183,13 +278,17 @@ contract BettingGame is Ownable, VRFConsumerBase {
         onlyCreatorAndChallenger(_msgSend)
         onlyExpiredGame(true)
     {
-        for (uint256 i = 0; i < depositBalanceRegistry[_msgSend].length; i++) {
+        for (
+            uint256 i = 0;
+            i < depositBalanceRegistry[_msgSend].balanceCount;
+            i++
+        ) {
             IERC20 token = IERC20(
-                depositBalanceRegistry[_msgSend][i].tokenAddress
+                depositBalanceRegistry[_msgSend].balance[i].tokenAddress
             );
-            token.transfer(
+            token.safeTransfer(
                 _msgSend,
-                depositBalanceRegistry[_msgSend][i].amount
+                depositBalanceRegistry[_msgSend].balance[i].amount
             );
         }
 

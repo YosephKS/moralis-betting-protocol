@@ -5,10 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "./BettingGame.sol";
-import "./IERC20Burnable.sol";
+import "./interfaces/IERC20Burnable.sol";
 
 contract BettingGameRegistry is Ownable, ChainlinkClient {
     using SafeMath for uint256;
+    using Chainlink for Chainlink.Request;
 
     event BettingGameCreated(
         uint256 bettingGameId,
@@ -16,18 +17,21 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
         uint256 sides,
         uint256 expiryTime
     );
-    event BettingGameChallengerRegistered(
-        uint256 bettingGameId,
-        address challenger
-    );
+
+    struct DepositFulfillment {
+        uint256 bettingGameId;
+        address tokenAddress;
+    }
 
     address public nativeTokenAddress;
     address internal vrfCoordinatorAddress;
     address internal linkTokenAddress;
     bytes32 internal keyHash;
     uint256 internal fee;
-    uint256 private bettingGameCount = 0;
+    uint256 private bettingGameCount;
     mapping(uint256 => address) public bettingGameDataRegistry;
+    mapping(bytes32 => DepositFulfillment)
+        public requestIdToBettingGameIdRegistry;
 
     constructor(
         address _nativeTokenAddress,
@@ -36,11 +40,13 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
         bytes32 _keyHash,
         uint256 _fee
     ) {
+        setPublicChainlinkToken();
         nativeTokenAddress = _nativeTokenAddress;
         vrfCoordinatorAddress = _vrfCoordinatorAddress;
         linkTokenAddress = _linkTokenAddress;
         keyHash = _keyHash;
         fee = _fee;
+        bettingGameCount = 0;
     }
 
     /**
@@ -112,15 +118,62 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
         existingGame.play(msg.sender);
     }
 
-    function depositBettingAsset(address _tokenAddress, uint256 _bettingGameId)
-        public
-        onlyExistingGame(_bettingGameId)
-    {
-        BettingGame existingGame = BettingGame(
-            bettingGameDataRegistry[_bettingGameId]
+    function depositBettingAsset(
+        address _tokenAddress,
+        string memory _symbols,
+        uint256 _bettingGameId,
+        address _oracle,
+        bytes32 _jobId,
+        uint256 _fee
+    ) public onlyExistingGame(_bettingGameId) returns (bytes32 requestId) {
+        Chainlink.Request memory request = buildChainlinkRequest(
+            _jobId,
+            address(this),
+            this.fulfill.selector
         );
 
-        existingGame.deposit(msg.sender, _tokenAddress);
+        // 1. Set the URL to perform the GET request on
+        request.add(
+            "get",
+            string(
+                abi.encodePacked(
+                    "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=",
+                    _symbols,
+                    "&tsyms=ETH"
+                )
+            )
+        );
+
+        request.add(
+            "path",
+            string(abi.encodePacked("RAW.ETH.", _symbols, ".VOLUME24HOUR"))
+        );
+
+        // 2. Multiply the result by 1000000000000000000 to remove decimals
+        int256 timesAmount = 10**18;
+        request.addInt("times", timesAmount);
+
+        // 3. Sends the request
+        requestId = sendChainlinkRequestTo(_oracle, request, _fee);
+        requestIdToBettingGameIdRegistry[requestId] = DepositFulfillment(
+            _bettingGameId,
+            _tokenAddress
+        );
+    }
+
+    function fulfill(bytes32 _requestId, uint256 _price)
+        public
+        recordChainlinkFulfillment(_requestId)
+    {
+        uint256 bettingGameId = requestIdToBettingGameIdRegistry[_requestId]
+            .bettingGameId;
+        address tokenAddress = requestIdToBettingGameIdRegistry[_requestId]
+            .tokenAddress;
+        BettingGame existingGame = BettingGame(
+            bettingGameDataRegistry[bettingGameId]
+        );
+
+        existingGame.deposit(msg.sender, tokenAddress, _price);
     }
 
     function withdrawBettingAsset(uint256 _bettingGameId)
