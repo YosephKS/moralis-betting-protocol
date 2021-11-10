@@ -10,8 +10,10 @@
   },
   "scripts": {
     "compile": "truffle compile",
-    "deploy": "truffle deploy",
-    "test": "truffle test"
+    "develop": "truffle develop",
+    "console": "truffle console",
+    "test": "truffle test",
+    "deploy": "truffle deploy"
   },
   "devDependencies": {
     "@truffle/hdwallet-provider": "^1.6.0",

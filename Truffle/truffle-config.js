@@ -5,9 +5,9 @@ require("dotenv").config();
 
 module.exports = {
   plugins: ["truffle-plugin-verify"],
-	api_keys: {
-		etherscan: process.env.ETHERSCAN_API_KEY,
-	},
+  api_keys: {
+    etherscan: process.env.ETHERSCAN_API_KEY,
+  },
   networks: {
     develop: {
       host: "127.0.0.1",
@@ -16,22 +16,26 @@ module.exports = {
       network_id: 1337,
     },
     ropsten: {
-			provider: () =>
-				new HDWalletProvider(
-					mnemonic,
-					`https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/ropsten`,
-				),
-			network_id: 3,
-			gas: 5500000,
-			confirmations: 2,
-			timeoutBlocks: 200,
-			skipDryRun: true,
-		},
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/eth/ropsten${process.env.ARCHIVE === true ? "/archive" : ""}`
+        ),
+      network_id: 3,
+      gas: 5500000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
     kovan: {
       provider: () =>
         new HDWalletProvider(
           mnemonic,
-            `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/kovan`,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/eth/kovan${process.env.ARCHIVE === true ? "/archive" : ""}`
         ),
       network_id: 42,
       gasPrice: 20000000000,
@@ -43,32 +47,110 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           mnemonic,
-          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/rinkeby`,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/eth/rinkeby${process.env.ARCHIVE === true ? "/archive" : ""}`
         ),
       network_id: 4,
       skipDryRun: true,
+    },
+    goerli: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/eth/goerli${process.env.ARCHIVE === true ? "/archive" : ""}`
+        );
+      },
+      network_id: 5,
+      gas: 4465030,
+      gasPrice: 10000000000,
     },
     mainnet: {
       provider: function () {
         return new HDWalletProvider(
           mnemonic,
-          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/eth/mainnet`,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/eth/mainnet${process.env.ARCHIVE === true ? "/archive" : ""}`
         );
       },
       gas: 5000000,
       gasPrice: 5e9,
       network_id: 1,
     },
+    binance_testnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/bsc/testnet${process.env.ARCHIVE === true ? "/archive" : ""}`
+        ),
+      network_id: 97,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    binance_mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/bsc/mainnet${process.env.ARCHIVE === true ? "/archive" : ""}`
+        ),
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    polygon_mumbai: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/polygon/mumbai${process.env.ARCHIVE === true ? "/archive" : ""}`
+        ),
+      network_id: 80001,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    polygon_mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${
+            process.env.MORALIS_SPEEDY_NODES_KEY
+          }/polygon/mainnet${process.env.ARCHIVE === true ? "/archive" : ""}`
+        ),
+      network_id: 137,
+      confirmations: 3,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    avalanche_mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/avalanche/mainnet`
+        ),
+      network_id: 43114,
+      skipDryRun: true,
+    },
   },
   compilers: {
-		solc: {
-			version: "0.8.9",
-			settings: {
-				optimizer: {
-					enabled: false,
-					runs: 200,
-				},
-			},
-		},
-	},
+    solc: {
+      version: "0.8.9",
+      settings: {
+        optimizer: {
+          enabled: false,
+          runs: 200,
+        },
+      },
+    },
+  },
 };
