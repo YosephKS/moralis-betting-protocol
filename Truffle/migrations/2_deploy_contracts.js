@@ -1,8 +1,17 @@
-const ConvertLib = artifacts.require("ConvertLib");
-const MetaCoin = artifacts.require("MetaCoin");
+const BettingGameToken = artifacts.require("BettingGameToken");
+const BettingGameRegistry = artifacts.require("BettingGameRegistry");
+const ChainlinkVRF = require("../list/ChainlinkVRF.json");
 
-module.exports = function(deployer) {
-  deployer.deploy(ConvertLib);
-  deployer.link(ConvertLib, MetaCoin);
-  deployer.deploy(MetaCoin);
+module.exports = async (deployer, network) => {
+  const ChainlinkVRFObj = ChainlinkVRF[network];
+  await deployer.deploy(BettingGameToken, "Betting Game Token", "BET");
+  const bettingGameTokenInst = await BettingGameToken.deployed();
+  await deployer.deploy(
+    BettingGameRegistry,
+    bettingGameTokenInst.address,
+    ChainlinkVRFObj.vrfCoordinatorAddress,
+    ChainlinkVRFObj.linkTokenAddress,
+    ChainlinkVRFObj.keyHash,
+    ChainlinkVRFObj.fee
+  );
 };

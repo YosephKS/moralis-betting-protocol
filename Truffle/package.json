@@ -16,6 +16,8 @@
     "deploy": "truffle deploy"
   },
   "devDependencies": {
+    "@chainlink/test-helpers": "^0.0.7-alpha",
+    "@openzeppelin/test-helpers": "^0.5.15",
     "@truffle/hdwallet-provider": "^1.6.0",
     "truffle-plugin-verify": "^0.5.17"
   }
