@@ -38,7 +38,7 @@ module.exports = {
           }/eth/kovan${process.env.ARCHIVE === true ? "/archive" : ""}`
         ),
       network_id: 42,
-      gasPrice: 20000000000,
+      // gasPrice: 20000000000,
       gas: 3716887,
       skipDryRun: true,
       networkCheckTimeout: 100000,
@@ -147,7 +147,7 @@ module.exports = {
       version: "0.8.9",
       settings: {
         optimizer: {
-          enabled: false,
+          enabled: true,
           runs: 200,
         },
       },

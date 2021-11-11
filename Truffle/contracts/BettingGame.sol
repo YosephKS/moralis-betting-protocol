@@ -99,16 +99,7 @@ contract BettingGame is Ownable, VRFConsumerBase {
     /**
      * Allow `_msgSend` address to register as a challenger
      */
-    function challenge(address _msgSend, address _nativeTokenAddress)
-        public
-        onlyOwner
-        onlyCreator(_msgSend, false)
-        onlyExpiredGame(false)
-    {
-        // Burn the token
-        IERC20Burnable nativeToken = IERC20Burnable(_nativeTokenAddress);
-        nativeToken.burnFrom(msg.sender, SafeMath.mul(0.01 * 10**18, sides));
-
+    function challenge(address _msgSend) public onlyOwner {
         challenger = _msgSend;
     }
 

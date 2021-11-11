@@ -10,6 +10,7 @@ import "./interfaces/IERC20Burnable.sol";
 contract BettingGameRegistry is Ownable, ChainlinkClient {
     using SafeMath for uint256;
     using Chainlink for Chainlink.Request;
+    using SafeERC20 for IERC20Burnable;
 
     event BettingGameCreated(
         uint256 bettingGameId,
@@ -53,7 +54,7 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
      * Making sure that the `_bettingGameId` is valid
      */
     modifier onlyExistingGame(uint256 _bettingGameId) {
-        require(_bettingGameId <= bettingGameCount);
+        require(_bettingGameId < bettingGameCount);
         _;
     }
 
@@ -92,8 +93,22 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
         BettingGame existingGame = BettingGame(
             bettingGameDataRegistry[_bettingGameId]
         );
+        require(
+            existingGame.creator() != msg.sender,
+            "You are the creator of this game!"
+        );
+        require(
+            block.timestamp < existingGame.expiryTime(),
+            "This game has not expired!"
+        );
 
-        existingGame.challenge(msg.sender, nativeTokenAddress);
+        // Burn the token (to avoid mallicious attempt at rigging the game)
+        IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);
+        uint256 burnPrice = SafeMath.mul(0.01 * 10**18, existingGame.sides());
+        nativeToken.safeApprove(address(this), burnPrice);
+        nativeToken.burnFrom(msg.sender, burnPrice);
+
+        existingGame.challenge(msg.sender);
     }
 
     function cancelGame(uint256 _bettingGameId)
@@ -137,9 +152,8 @@ contract BettingGameRegistry is Ownable, ChainlinkClient {
             "get",
             string(
                 abi.encodePacked(
-                    "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=",
-                    _symbols,
-                    "&tsyms=ETH"
+                    "https://min-api.cryptocompare.com/data/pricemultifull?tsyms=ETH&fsyms=",
+                    _symbols
                 )
             )
         );
