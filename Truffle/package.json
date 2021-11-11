@@ -13,7 +13,7 @@
     "develop": "truffle develop",
     "console": "truffle console",
     "test": "truffle test",
-    "deploy": "truffle deploy",
+    "migrate": "truffle migrate",
     "verify": "truffle run verify"
   },
   "devDependencies": {

@@ -89,9 +89,12 @@ contract BettingGame is Ownable, VRFConsumerBase {
      */
     modifier onlyExpiredGame(bool isExpired) {
         if (isExpired) {
-            require(block.timestamp >= expiryTime, "This game has expired!");
+            require(
+                block.timestamp >= expiryTime,
+                "This game has not expired!"
+            );
         } else {
-            require(block.timestamp < expiryTime, "This game has not expired!");
+            require(block.timestamp < expiryTime, "This game has expired!");
         }
         _;
     }
@@ -235,23 +238,12 @@ contract BettingGame is Ownable, VRFConsumerBase {
     function deposit(
         address _msgSend,
         address _tokenAddress,
-        uint256 _price
-    )
-        public
-        onlyOwner
-        onlyCreatorAndChallenger(_msgSend)
-        onlyExpiredGame(false)
-    {
-        // 1. Transfer ERC20 token from user to the `BettingGame` contract
-        IERC20 token = IERC20(_tokenAddress);
-        uint256 tokenAmount = SafeMath.div(SafeMath.mul(_price, sides), 100);
-        token.safeApprove(address(this), tokenAmount);
-        token.safeTransferFrom(_msgSend, address(this), tokenAmount);
-
-        // 2. Register deposit data to `depositBalanceRegistry` mapping
+        uint256 _tokenAmount
+    ) public onlyOwner {
+        // Register deposit data to `depositBalanceRegistry` mapping
         uint256 balanceCount = depositBalanceRegistry[_msgSend].balanceCount;
         depositBalanceRegistry[_msgSend].balance[balanceCount] = DepositBalance(
-            tokenAmount,
+            _tokenAmount,
             _tokenAddress
         );
         depositBalanceRegistry[_msgSend].balanceCount = SafeMath.add(
