@@ -245,7 +245,7 @@ contract BettingGame is Ownable, VRFConsumerBase {
         // 1. Transfer ERC20 token from user to the `BettingGame` contract
         IERC20 token = IERC20(_tokenAddress);
         uint256 tokenAmount = SafeMath.div(SafeMath.mul(_price, sides), 100);
-        token.safeApprove(address(this), token.balanceOf(_msgSend));
+        token.safeApprove(address(this), tokenAmount);
         token.safeTransferFrom(_msgSend, address(this), tokenAmount);
 
         // 2. Register deposit data to `depositBalanceRegistry` mapping
