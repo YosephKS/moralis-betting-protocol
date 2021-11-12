@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import App from "./App";
 import { MoralisProvider } from "react-moralis";
 import "./index.css";
-import QuickStart from "components/QuickStart";
+import QuickStart from "components/Dashboard";
 import { MoralisDappProvider } from "./providers/MoralisDappProvider/MoralisDappProvider";
 
 const APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
@@ -15,7 +15,7 @@ ReactDOM.render(
     {APP_ID && SERVER_URL ? (
       <MoralisProvider appId={APP_ID} serverUrl={SERVER_URL}>
         <MoralisDappProvider>
-          <App isServerInfo />
+          <App />
         </MoralisDappProvider>
       </MoralisProvider>
     ) : (

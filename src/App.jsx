@@ -7,24 +7,27 @@ import {
   NavLink,
   Redirect,
 } from "react-router-dom";
-import Account from "components/Account";
-import Chains from "components/Chains";
-import ERC20Balance from "components/ERC20Balance";
-import Wallet from "components/Wallet";
 import { Menu, Layout } from "antd";
 import "antd/dist/antd.css";
-import NativeBalance from "components/NativeBalance";
 import "./style.css";
-import QuickStart from "components/QuickStart";
-const { Header } = Layout;
-const { SubMenu } = Menu;
+import Account from "components/Account";
+import Chains from "components/Chains";
+import Holdings from "components/Holdings";
+import NativeBalance from "components/NativeBalance";
+import Dashboard from "components/Dashboard";
+import Faucet from "components/Faucet";
 
 const styles = {
   content: {
     display: "flex",
     fontFamily: "Roboto, sans-serif",
     color: "#041836",
-    marginTop: "64px",
+    marginTop: "60px",
+  },
+  subcontent: {
+    display: "flex",
+    padding: " 3rem",
+    width: "100%",
   },
   header: {
     position: "fixed",
@@ -46,7 +49,7 @@ const styles = {
     fontWeight: "600",
   },
 };
-const App = ({ isServerInfo }) => {
+const App = () => {
   const { isWeb3Enabled, enableWeb3, isAuthenticated } = useMoralis();
 
   useEffect(() => {
@@ -59,84 +62,56 @@ const App = ({ isServerInfo }) => {
   return (
     <Router>
       <Layout style={{ height: "100%", background: "#f0f2f500" }}>
-        <Header style={styles.header}>
+        <Layout.Header style={styles.header}>
           <Logo />
-          <Menu
-            theme="light"
-            mode="horizontal"
-            style={{
-              display: "flex",
-              fontSize: "17px",
-              fontWeight: "500",
-              width: "100%",
-            }}
-            defaultSelectedKeys={["quickstart"]}
-          >
-            <Menu.Item key="quickstart">
-              <NavLink to="/quickstart">🚀 Quick Start</NavLink>
-            </Menu.Item>
-            <Menu.Item key="wallet">
-              <NavLink to="/wallet">👛 Wallet</NavLink>
-            </Menu.Item>
-            <Menu.Item key="balances">
-              <NavLink to="/erc20balance">💰 Holdings</NavLink>
-            </Menu.Item>
-          </Menu>
           <div style={styles.headerRight}>
             <Chains />
             <NativeBalance />
             <Account />
           </div>
-        </Header>
+        </Layout.Header>
         <div style={styles.content}>
           <Menu
-            // onClick={this.handleClick}
-            style={{ width: 256 }}
-            defaultSelectedKeys={["1"]}
-            defaultOpenKeys={["sub1"]}
+            style={{ maxWidth: 300 }}
+            defaultSelectedKeys={["dashboard"]}
+            defaultOpenKeys={["me"]}
             mode="inline"
           >
-            <SubMenu key="sub1" title="Navigation One">
-              <Menu.ItemGroup key="g1" title="Item 1">
-                <Menu.Item key="1">Option 1</Menu.Item>
-                <Menu.Item key="2">Option 2</Menu.Item>
-              </Menu.ItemGroup>
-              <Menu.ItemGroup key="g2" title="Item 2">
-                <Menu.Item key="3">Option 3</Menu.Item>
-                <Menu.Item key="4">Option 4</Menu.Item>
-              </Menu.ItemGroup>
-            </SubMenu>
-            <SubMenu key="sub2" title="Navigation Two">
-              <Menu.Item key="5">Option 5</Menu.Item>
-              <Menu.Item key="6">Option 6</Menu.Item>
-              <SubMenu key="sub3" title="Submenu">
-                <Menu.Item key="7">Option 7</Menu.Item>
-                <Menu.Item key="8">Option 8</Menu.Item>
-              </SubMenu>
-            </SubMenu>
-            <SubMenu key="sub4" title="Navigation Three">
-              <Menu.Item key="9">Option 9</Menu.Item>
-              <Menu.Item key="10">Option 10</Menu.Item>
-              <Menu.Item key="11">Option 11</Menu.Item>
-              <Menu.Item key="12">Option 12</Menu.Item>
-            </SubMenu>
+            <Menu.Item key="dashboard">
+              <NavLink to="/dashboard">Dashboard</NavLink>
+            </Menu.Item>
+            <Menu.Item key="faucet">
+              <NavLink to="/faucet">Faucet</NavLink>
+            </Menu.Item>
+            <Menu.SubMenu key="me" title="Me">
+              <Menu.Item key="bets">
+                <NavLink to="/bets">Bets</NavLink>
+              </Menu.Item>
+              <Menu.Item key="holdings">
+                <NavLink to="/holdings">Holdings</NavLink>
+              </Menu.Item>
+            </Menu.SubMenu>
           </Menu>
-
-          <Switch>
-            <Route path="/quickstart">
-              <QuickStart isServerInfo={isServerInfo} />
-            </Route>
-            <Route path="/wallet">
-              <Wallet />
-            </Route>
-            <Route path="/erc20balance">
-              <ERC20Balance />
-            </Route>
-            <Route path="/nonauthenticated">
-              <>Please login using the "Authenticate" button</>
-            </Route>
-          </Switch>
-          <Redirect to="/quickstart" />
+          <div style={styles.subcontent}>
+            <Switch>
+              <Route path="/dashboard">
+                <Dashboard />
+              </Route>
+              <Route path="/faucet">
+                <Faucet />
+              </Route>
+              <Route path="/bets">
+                <Holdings />
+              </Route>
+              <Route path="/holdings">
+                <Holdings />
+              </Route>
+              <Route path="/nonauthenticated">
+                <>Please login using the "Authenticate" button</>
+              </Route>
+            </Switch>
+            <Redirect to="/dashboard" />
+          </div>
         </div>
       </Layout>
     </Router>

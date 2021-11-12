@@ -23,17 +23,18 @@ function Account() {
   const { authenticate, isAuthenticated, logout } = useMoralis();
   const { walletAddress } = useMoralisDapp();
 
-  if (!isAuthenticated) {
-    return (
-      <div style={styles.account} onClick={() => authenticate({ signingMessage: "Hello World!" })}>
-        <p style={styles.text}>Authenticate</p>
-      </div>
-    );
-  }
-
-  return (
+  return !isAuthenticated ? (
+    <div
+      style={styles.account}
+      onClick={() => authenticate({ signingMessage: "Hello World!" })}
+    >
+      <p style={styles.text}>Authenticate</p>
+    </div>
+  ) : (
     <div style={styles.account} onClick={() => logout()}>
-      <p style={{ marginRight: "5px", ...styles.text }}>{getEllipsisTxt(walletAddress, 6)}</p>
+      <p style={{ marginRight: "5px", ...styles.text }}>
+        {getEllipsisTxt(walletAddress, 6)}
+      </p>
       <Blockie currentWallet scale={3} />
     </div>
   );
