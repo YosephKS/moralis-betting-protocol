@@ -1,5 +1,5 @@
-import React from "react";
+import { createContext } from "react";
 
-const MoralisDappContext = React.createContext();
+const MoralisDappContext = createContext();
 
 export default MoralisDappContext;

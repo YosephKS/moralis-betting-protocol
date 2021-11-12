@@ -20,11 +20,6 @@ contract BettingGameRegistry is Ownable {
         uint256 expiryTime
     );
 
-    struct DepositFulfillment {
-        uint256 bettingGameId;
-        address tokenAddress;
-    }
-
     address public nativeTokenAddress;
     address internal vrfCoordinatorAddress;
     address internal linkTokenAddress;
@@ -32,8 +27,6 @@ contract BettingGameRegistry is Ownable {
     uint256 internal fee;
     uint256 private bettingGameCount;
     mapping(uint256 => address) public bettingGameDataRegistry;
-    mapping(bytes32 => DepositFulfillment)
-        public requestIdToBettingGameIdRegistry;
 
     constructor(
         address _nativeTokenAddress,
@@ -69,7 +62,6 @@ contract BettingGameRegistry is Ownable {
         // 1. Burn some token
         IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);
         uint256 burnPrice = SafeMath.mul(0.01 * 10**18, _sides);
-        nativeToken.safeApprove(address(this), burnPrice);
         nativeToken.burnFrom(msg.sender, burnPrice);
 
         // 2. Create new `BettingGame` smart contract
@@ -100,7 +92,7 @@ contract BettingGameRegistry is Ownable {
             "You are the creator of this game!"
         );
         require(
-            existingGame.challenger() != address(0),
+            existingGame.challenger() == address(0),
             "Challenger position is filled!"
         );
         require(
@@ -111,7 +103,6 @@ contract BettingGameRegistry is Ownable {
         // Burn the token (to avoid mallicious attempt at rigging the game)
         IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);
         uint256 burnPrice = SafeMath.mul(0.01 * 10**18, existingGame.sides());
-        nativeToken.safeApprove(address(this), burnPrice);
         nativeToken.burnFrom(msg.sender, burnPrice);
 
         existingGame.challenge(msg.sender);
@@ -170,7 +161,6 @@ contract BettingGameRegistry is Ownable {
             SafeMath.mul(uint256(price), existingGame.sides()),
             100
         );
-        token.safeApprove(address(this), tokenAmount);
         token.safeTransferFrom(msg.sender, address(existingGame), tokenAmount);
         existingGame.deposit(msg.sender, _tokenAddress, tokenAmount);
     }
