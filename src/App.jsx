@@ -16,6 +16,7 @@ import Holdings from "components/Holdings";
 import NativeBalance from "components/NativeBalance";
 import Dashboard from "components/Dashboard";
 import Faucet from "components/Faucet";
+import Bets from "components/Bets";
 
 const styles = {
   content: {
@@ -101,7 +102,7 @@ const App = () => {
                 <Faucet />
               </Route>
               <Route path="/bets">
-                <Holdings />
+                <Bets />
               </Route>
               <Route path="/holdings">
                 <Holdings />
