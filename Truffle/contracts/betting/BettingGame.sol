@@ -152,6 +152,17 @@ contract BettingGame is VRFConsumerBase {
         );
         requestId = requestRandomness(keyHash, fee);
         requestIdToAddressRegistry[requestId] = msg.sender;
+    }
+
+    /**
+     * This is a function overriden from Chainlink VRF contract to get the randomness result
+     */
+    function fulfillRandomness(bytes32 requestId, uint256 randomness)
+        internal
+        override
+    {
+        address playerAddress = requestIdToAddressRegistry[requestId];
+        playerBetRecordRegistry[playerAddress] = (randomness % sides) + 1;
 
         if (
             playerBetRecordRegistry[creator] != 0 &&
@@ -171,17 +182,6 @@ contract BettingGame is VRFConsumerBase {
                 winner = challenger;
             }
         }
-    }
-
-    /**
-     * This is a function overriden from Chainlink VRF contract to get the randomness result
-     */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness)
-        internal
-        override
-    {
-        address playerAddress = requestIdToAddressRegistry[requestId];
-        playerBetRecordRegistry[playerAddress] = (randomness % sides) + 1;
     }
 
     /**
