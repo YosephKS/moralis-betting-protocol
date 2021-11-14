@@ -5,10 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
-contract BettingGameToken is ERC20, ERC20Burnable, Ownable {
-    
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+contract ERC20Basic is ERC20, ERC20Burnable, Ownable {
+    constructor(string memory _name, string memory _symbol)
+        ERC20(_name, _symbol)
+    {}
 
     /**
      * Public minting function (for testing purposes)

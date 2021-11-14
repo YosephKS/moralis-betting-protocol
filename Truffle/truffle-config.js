@@ -141,6 +141,15 @@ module.exports = {
       network_id: 43114,
       skipDryRun: true,
     },
+    fantom_mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://speedy-nodes-nyc.moralis.io/${process.env.MORALIS_SPEEDY_NODES_KEY}/fantom/mainnet`
+        ),
+      network_id: 250,
+      skipDryRun: true,
+    },
   },
   compilers: {
     solc: {

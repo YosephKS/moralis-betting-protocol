@@ -1,11 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useMoralis } from "react-moralis";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   NavLink,
-  Redirect,
 } from "react-router-dom";
 import { Menu, Layout } from "antd";
 import "antd/dist/antd.css";
@@ -50,8 +49,23 @@ const styles = {
     fontWeight: "600",
   },
 };
+
 const App = () => {
   const { isWeb3Enabled, enableWeb3, isAuthenticated } = useMoralis();
+  const defaultSelectedKey = useMemo(() => {
+    switch (window?.location?.pathname) {
+      case "/dashboard":
+        return "dashboard";
+      case "/faucet":
+        return "faucet";
+      case "/bets":
+        return "bets";
+      case "/holdings":
+        return "holdings";
+      default:
+        return "";
+    }
+  }, []);
 
   useEffect(() => {
     if (window?.web3 && isAuthenticated && !isWeb3Enabled) {
@@ -74,7 +88,7 @@ const App = () => {
         <div style={styles.content}>
           <Menu
             style={{ maxWidth: 300 }}
-            defaultSelectedKeys={["dashboard"]}
+            defaultSelectedKeys={[defaultSelectedKey]}
             defaultOpenKeys={["me"]}
             mode="inline"
           >
@@ -111,7 +125,6 @@ const App = () => {
                 <>Please login using the "Authenticate" button</>
               </Route>
             </Switch>
-            <Redirect to="/dashboard" />
           </div>
         </div>
       </Layout>
