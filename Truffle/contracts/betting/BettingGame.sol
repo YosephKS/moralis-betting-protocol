@@ -17,6 +17,11 @@ contract BettingGame is VRFConsumerBase {
         CLOSED
     }
 
+    event Challenge(address challenger);
+    event Play(address playerAddress, uint256 randomResult);
+    event Deposit(address tokenAddress, uint256 tokenAmount);
+    event Withdraw(address winner, address tokenAddress, uint256 tokenAmount);
+
     bytes32 internal keyHash;
     uint256 internal fee;
     address public creator;
@@ -105,6 +110,9 @@ contract BettingGame is VRFConsumerBase {
         _;
     }
 
+    /**
+     * Making sure that the function has only access to the winner
+     */
     modifier onlyWinner() {
         require(msg.sender == winner, "You are not the winner of this game!");
         _;
@@ -148,6 +156,8 @@ contract BettingGame is VRFConsumerBase {
         nativeToken.burnFrom(msg.sender, burnPrice);
 
         challenger = msg.sender;
+
+        emit Challenge(msg.sender);
     }
 
     /**
@@ -182,7 +192,10 @@ contract BettingGame is VRFConsumerBase {
         override
     {
         address playerAddress = requestIdToAddressRegistry[requestId];
-        playerBetRecordRegistry[playerAddress] = (randomness % sides) + 1;
+        uint256 randomResult = (randomness % sides) + 1;
+        playerBetRecordRegistry[playerAddress] = randomResult;
+
+        emit Play(playerAddress, randomResult);
 
         if (
             playerBetRecordRegistry[creator] != 0 &&
@@ -231,6 +244,8 @@ contract BettingGame is VRFConsumerBase {
         if (depositTokenAddress == address(0)) {
             depositTokenAddress = _tokenAddress;
         }
+
+        emit Deposit(_tokenAddress, tokenAmount);
     }
 
     /**
@@ -243,6 +258,9 @@ contract BettingGame is VRFConsumerBase {
         onlyWinner
     {
         IERC20 token = IERC20(depositTokenAddress);
-        token.safeTransfer(msg.sender, token.balanceOf(address(this)));
+        uint256 tokenAmount = token.balanceOf(address(this));
+        token.safeTransfer(msg.sender, tokenAmount);
+
+        emit Withdraw(msg.sender, depositTokenAddress, tokenAmount);
     }
 }

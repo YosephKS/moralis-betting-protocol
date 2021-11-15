@@ -16,8 +16,7 @@ contract BettingGameRegistry is Ownable {
     event BettingGameCreated(
         uint256 bettingGameId,
         address creator,
-        uint256 sides,
-        uint256 expiryTime
+        uint256 sides
     );
 
     address public nativeTokenAddress;
@@ -66,7 +65,7 @@ contract BettingGameRegistry is Ownable {
         nativeTokenAddress = newNativeTokenAddress;
     }
 
-    function createGame(uint256 _sides) public {
+    function createGame(uint256 _sides) public returns (address) {
         // 1. Burn some token
         IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);
         uint256 burnPrice = SafeMath.mul(0.01 * 10**18, _sides);
@@ -84,7 +83,11 @@ contract BettingGameRegistry is Ownable {
         );
         bettingGameDataRegistry[bettingGameCount] = address(newBettingGame);
 
+        emit BettingGameCreated(bettingGameCount, msg.sender, _sides);
+
         // 3. Increase Betting Game Counter
         bettingGameCount = SafeMath.add(bettingGameCount, 1);
+
+        return address(newBettingGame);
     }
 }
