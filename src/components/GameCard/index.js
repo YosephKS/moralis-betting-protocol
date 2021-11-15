@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, Typography, Button, Space } from "antd";
+import { getEllipsisTxt } from "helpers/formatters";
 
 export default function CardIndex(props) {
   const {
@@ -13,7 +14,7 @@ export default function CardIndex(props) {
     buttonDisabled,
   } = props;
   return (
-    <Card title={cardTitle} bordered hoverable>
+    <Card title={getEllipsisTxt(cardTitle)} bordered hoverable>
       <div
         style={{
           display: "flex",
@@ -34,7 +35,7 @@ export default function CardIndex(props) {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Button
           size="large"
-          type="primary"
+          type="default"
           style={{ width: "100%" }}
           // onClick={onClick}
         >

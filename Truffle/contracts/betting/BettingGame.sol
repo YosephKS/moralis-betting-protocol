@@ -17,11 +17,6 @@ contract BettingGame is VRFConsumerBase {
         CLOSED
     }
 
-    struct DepositMetadata {
-        mapping(uint256 => address) balance;
-        uint256 balanceCount;
-    }
-
     bytes32 internal keyHash;
     uint256 internal fee;
     address public creator;
@@ -30,11 +25,11 @@ contract BettingGame is VRFConsumerBase {
     BettingGameStatus public status;
     uint256 public expiryTime;
     address public nativeTokenAddress;
+    address depositTokenAddress;
     address public winner;
 
     mapping(bytes32 => address) requestIdToAddressRegistry;
     mapping(address => uint256) public playerBetRecordRegistry;
-    mapping(address => DepositMetadata) public depositBalanceRegistry;
 
     constructor(
         address _vrfCoordinatorAddress,
@@ -206,16 +201,6 @@ contract BettingGame is VRFConsumerBase {
             100
         );
         token.safeTransferFrom(msg.sender, address(this), tokenAmount);
-
-        // Register deposit data to `depositBalanceRegistry` mapping
-        uint256 balanceCount = depositBalanceRegistry[msg.sender].balanceCount;
-        depositBalanceRegistry[msg.sender].balance[
-            balanceCount
-        ] = _tokenAddress;
-        depositBalanceRegistry[msg.sender].balanceCount = SafeMath.add(
-            balanceCount,
-            1
-        );
     }
 
     /**
@@ -227,15 +212,7 @@ contract BettingGame is VRFConsumerBase {
         onlyExpiredGame(true)
         onlyWinner
     {
-        for (
-            uint256 i = 0;
-            i < depositBalanceRegistry[msg.sender].balanceCount;
-            i++
-        ) {
-            IERC20 token = IERC20(
-                depositBalanceRegistry[msg.sender].balance[i]
-            );
-            token.safeTransfer(msg.sender, token.balanceOf(address(this)));
-        }
+        IERC20 token = IERC20(depositTokenAddress);
+        token.safeTransfer(msg.sender, token.balanceOf(address(this)));
     }
 }

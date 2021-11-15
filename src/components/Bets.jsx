@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Typography,
   Row,
@@ -10,29 +10,36 @@ import {
   InputNumber,
   Select,
 } from "antd";
-import { useMoralisWeb3Api } from "react-moralis";
 import GameCard from "./GameCard";
-// import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 
 export default function Bets() {
-  const Web3Api = useMoralisWeb3Api();
+  const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [visible, setVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
   const [depositAsset, setDepositAsset] = useState("");
-  const erc20TokenPrice = useMemo(
-    async () =>
-      depositAsset !== "" &&
-      (await Web3Api.token.getTokenPrice({
-        address: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-      })),
-    [depositAsset, Web3Api.token]
-  );
+  const tokenAddressList = {
+    uni: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    link: "0x514910771af9ca656af840dff83e8264ecf986ca",
+    dai: "0x6b175474e89094c44da98b954eedeac495271d0f",
+  };
+
+  useEffect(() => {
+    if (depositAsset !== "") {
+      fetchNativeTokenPrice({
+        address: tokenAddressList[depositAsset],
+        exchange: "uniswap-v3",
+      });
+    }
+    // eslint-disable-next-line
+  }, [depositAsset]);
+  console.log(nativeTokenPrice);
 
   return (
     <>
       <Modal
-        title="Create Game"
+        title="Create New Game"
         centered
         visible={visible}
         closable={false}
@@ -102,7 +109,14 @@ export default function Bets() {
               {depositAsset && (
                 <Typography.Text style={{ fontSize: "16px" }}>
                   You will deposit approximately{" "}
-                  <b>... {depositAsset.toUpperCase()}</b>
+                  <b>
+                    {(
+                      (nativeTokenPrice ? 1 / nativeTokenPrice : 0) *
+                      sides *
+                      0.01
+                    ).toFixed(3)}{" "}
+                    {depositAsset.toUpperCase()} ({sides * 0.01} ETH)
+                  </b>
                 </Typography.Text>
               )}
               <Button type="default" style={{ width: "100%" }}>
@@ -117,7 +131,18 @@ export default function Bets() {
               </Button>
             </Space>
           )}
-          {currentIndex === 2 && <></>}
+          {currentIndex === 2 && (
+            <Space direction="vertical" align="center" size="middle">
+              <Typography.Text>
+                If the sum of your bet result and your challenger's is{" "}
+                <b>EVEN</b>, you WIN!
+              </Typography.Text>
+              <Typography.Text>Otherwise, you LOSE</Typography.Text>
+              <Button type="primary" style={{ width: "100%" }}>
+                Bet now!
+              </Button>
+            </Space>
+          )}
         </div>
       </Modal>
       <div style={{ width: "100%" }}>
@@ -143,7 +168,7 @@ export default function Bets() {
               cardTitle="0xb46bb2E9d9B55D5EAE10960EbBA27F966D9511d1"
               sides={5}
               status={0}
-              buttonText="withdraw"
+              buttonText="Withdraw"
             />
           </Col>
         </Row>
