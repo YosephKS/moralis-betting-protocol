@@ -48,6 +48,7 @@ contract BettingGame is VRFConsumerBase {
         status = BettingGameStatus.OPEN;
         expiryTime = block.timestamp + 30 minutes;
         nativeTokenAddress = _nativeTokenAddress;
+        depositTokenAddress = address(0);
     }
 
     /**
@@ -107,6 +108,30 @@ contract BettingGame is VRFConsumerBase {
     modifier onlyWinner() {
         require(msg.sender == winner, "You are not the winner of this game!");
         _;
+    }
+
+    function getBettingGameInfo()
+        public
+        view
+        returns (
+            address,
+            address,
+            uint256,
+            BettingGameStatus,
+            uint256,
+            address,
+            address
+        )
+    {
+        return (
+            creator,
+            challenger,
+            sides,
+            status,
+            expiryTime,
+            depositTokenAddress,
+            winner
+        );
     }
 
     /**
@@ -201,6 +226,11 @@ contract BettingGame is VRFConsumerBase {
             100
         );
         token.safeTransferFrom(msg.sender, address(this), tokenAmount);
+
+        // 3. Set Deposit Token Address when it is empty
+        if (depositTokenAddress == address(0)) {
+            depositTokenAddress = _tokenAddress;
+        }
     }
 
     /**

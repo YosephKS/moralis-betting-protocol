@@ -51,7 +51,8 @@ const styles = {
 };
 
 const App = () => {
-  const { isWeb3Enabled, enableWeb3, isAuthenticated } = useMoralis();
+  const { isWeb3Enabled, enableWeb3, isAuthenticated, isWeb3EnableLoading } =
+    useMoralis();
   const defaultSelectedKey = useMemo(() => {
     switch (window?.location?.pathname) {
       case "/dashboard":
@@ -68,11 +69,16 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (window?.web3 && isAuthenticated && !isWeb3Enabled) {
+    if (
+      window?.web3 &&
+      isAuthenticated &&
+      !isWeb3Enabled &&
+      !isWeb3EnableLoading
+    ) {
       enableWeb3();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated, isWeb3Enabled]);
 
   return (
     <Router>
