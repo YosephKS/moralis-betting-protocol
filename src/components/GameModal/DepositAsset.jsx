@@ -27,7 +27,7 @@ export default function DepositAsset(props) {
     contractAddress: tokenAddressList[depositAsset],
     functionName: "approve",
     params: {
-      spender: "0xd944EACfeDCd3DD7E0b1E7131996260a40ADccBa",
+      spender: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
       amount: Moralis.Units.Token(6, 18),
     },
   });
@@ -38,7 +38,7 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0xd944EACfeDCd3DD7E0b1E7131996260a40ADccBa",
+    contractAddress: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
     functionName: "deposit",
     params: {
       _tokenAddress: tokenAddressList[depositAsset],
