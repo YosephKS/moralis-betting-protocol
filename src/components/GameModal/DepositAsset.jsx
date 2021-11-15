@@ -3,7 +3,7 @@ import { Space, Typography, Select, Button } from "antd";
 import { useMoralis } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20ABI from "../../contracts/ERC20.json";
-import BettingGameRegistryABI from "../../contracts/BettingGameRegistry.json";
+import BettingGameABI from "../../contracts/BettingGame.json";
 
 export default function DepositAsset(props) {
   const { depositAsset, handleSelect, nativeTokenPrice, sides, handleNext } =
@@ -14,7 +14,7 @@ export default function DepositAsset(props) {
     dai: "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa",
   };
   const { abi: erc20ABI } = ERC20ABI;
-  const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
+  const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
   const { Moralis } = useMoralis();
 
@@ -37,7 +37,7 @@ export default function DepositAsset(props) {
     isLoading: isDepositLoading,
     isRunning: isDepositRunning,
   } = useWeb3Contract({
-    abi: bettingGameRegistryABI,
+    abi: bettingGameABI,
     contractAddress: "0xd944EACfeDCd3DD7E0b1E7131996260a40ADccBa",
     functionName: "deposit",
     params: {
