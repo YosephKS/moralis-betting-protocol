@@ -104,14 +104,16 @@ const App = () => {
             <Menu.Item key="faucet">
               <NavLink to="/faucet">Faucet</NavLink>
             </Menu.Item>
-            <Menu.SubMenu key="me" title="Me">
-              <Menu.Item key="bets">
-                <NavLink to="/bets">Bets</NavLink>
-              </Menu.Item>
-              <Menu.Item key="holdings">
-                <NavLink to="/holdings">Holdings</NavLink>
-              </Menu.Item>
-            </Menu.SubMenu>
+            {isAuthenticated && (
+              <Menu.SubMenu key="me" title="Me">
+                <Menu.Item key="bets">
+                  <NavLink to="/bets">Bets</NavLink>
+                </Menu.Item>
+                <Menu.Item key="holdings">
+                  <NavLink to="/holdings">Holdings</NavLink>
+                </Menu.Item>
+              </Menu.SubMenu>
+            )}
           </Menu>
           <div style={styles.subcontent}>
             <Switch>
@@ -121,12 +123,16 @@ const App = () => {
               <Route path="/faucet">
                 <Faucet />
               </Route>
-              <Route path="/bets">
-                <Bets />
-              </Route>
-              <Route path="/holdings">
-                <Holdings />
-              </Route>
+              {isAuthenticated && (
+                <>
+                  <Route path="/bets">
+                    <Bets />
+                  </Route>
+                  <Route path="/holdings">
+                    <Holdings />
+                  </Route>
+                </>
+              )}
               <Route path="/nonauthenticated">
                 <>Please login using the "Authenticate" button</>
               </Route>

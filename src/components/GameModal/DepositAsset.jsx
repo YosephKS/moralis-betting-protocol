@@ -1,22 +1,40 @@
 import React, { useState, useMemo } from "react";
 import { Space, Typography, Select, Button } from "antd";
-import { useMoralis } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20ABI from "../../contracts/ERC20.json";
+import PriceConverterABI from "../../contracts/PriceConverter.json";
 import BettingGameABI from "../../contracts/BettingGame.json";
+import deployedContracts from "../../list/deployedContracts.json";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function DepositAsset(props) {
   const { depositAsset, handleSelect, nativeTokenPrice, sides, handleNext } =
     props;
+  const { chainId } = useMoralisDapp();
   const tokenAddressList = {
     uni: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
     link: "0xa36085F69e2889c224210F603D836748e7dC0088",
     dai: "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa",
   };
   const { abi: erc20ABI } = ERC20ABI;
+  const { abi: priceConverterABI } = PriceConverterABI;
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
-  const { Moralis } = useMoralis();
+
+  const {
+    runContractFunction: runGetPriceConverter,
+    isLoading: isPriceConverterLoading,
+    isRunning: isPriceConverterRunning,
+  } = useWeb3Contract({
+    abi: priceConverterABI,
+    contractAddress: deployedContracts[chainId].priceConverter,
+    functionName: "getDerivedPrice",
+    params: {
+      _base: "",
+      _quote: "",
+      _decimals: 18,
+    },
+  });
 
   const {
     runContractFunction: runApprove,
@@ -26,10 +44,6 @@ export default function DepositAsset(props) {
     abi: erc20ABI,
     contractAddress: tokenAddressList[depositAsset],
     functionName: "approve",
-    params: {
-      spender: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
-      amount: Moralis.Units.Token(6, 18),
-    },
   });
 
   const {
@@ -48,11 +62,20 @@ export default function DepositAsset(props) {
 
   const disableButton = useMemo(
     () =>
+      isPriceConverterLoading ||
+      isPriceConverterRunning ||
       isApproveRunning ||
       isApproveLoading ||
       isDepositLoading ||
       isDepositRunning,
-    [isApproveLoading, isApproveRunning, isDepositLoading, isDepositRunning]
+    [
+      isPriceConverterLoading,
+      isPriceConverterRunning,
+      isApproveLoading,
+      isApproveRunning,
+      isDepositLoading,
+      isDepositRunning,
+    ]
   );
 
   return (
@@ -91,7 +114,17 @@ export default function DepositAsset(props) {
           if (isApproved) {
             runDeposit({ onSuccess: () => handleNext() });
           } else {
-            runApprove({ onSuccess: () => setIsApproved(true) });
+            runGetPriceConverter({
+              onSuccess: (amount) => {
+                runApprove({
+                  params: {
+                    spender: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
+                    amount,
+                  },
+                  onSuccess: () => setIsApproved(true),
+                });
+              },
+            });
           }
         }}
       >

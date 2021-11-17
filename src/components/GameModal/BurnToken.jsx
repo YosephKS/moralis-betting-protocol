@@ -4,9 +4,12 @@ import { useMoralis } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20BasicABI from "../../contracts/ERC20Basic.json";
 import BettingGameRegistryABI from "../../contracts/BettingGameRegistry.json";
+import deployedContracts from "../../list/deployedContracts.json";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function BurnToken(props) {
-  const { sides, handleInputNumberChange, handleNext } = props;
+  const { sides, handleInputNumberChange, handleApprove, handleNext } = props;
+  const { chainId } = useMoralisDapp();
   const { abi: erc20BasicABI } = ERC20BasicABI;
   const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
   const { Moralis } = useMoralis();
@@ -17,7 +20,7 @@ export default function BurnToken(props) {
     isRunning: isApproveRunning,
   } = useWeb3Contract({
     abi: erc20BasicABI,
-    contractAddress: "0x9ca6E4683371a99355c476Be3fc6CF4d31e67350",
+    contractAddress: deployedContracts[chainId].erc20Basic,
     functionName: "approve",
     params: {
       spender: "0x112749001D291ecCE228123D2EBba0ef24661a49",
@@ -31,7 +34,7 @@ export default function BurnToken(props) {
     isRunning: isCreateGameRunning,
   } = useWeb3Contract({
     abi: bettingGameRegistryABI,
-    contractAddress: "0x112749001D291ecCE228123D2EBba0ef24661a49",
+    contractAddress: deployedContracts[chainId].bettingGameRegistry,
     functionName: "createGame",
     params: {
       _sides: sides,
@@ -71,7 +74,12 @@ export default function BurnToken(props) {
               onSuccess: () => handleNext(),
             });
           } else {
-            runApprove({ onSuccess: () => setIsApproved(true) });
+            runApprove({
+              onSuccess: (result) => {
+                handleApprove(result);
+                setIsApproved(true);
+              },
+            });
           }
         }}
         style={{ width: "100%" }}

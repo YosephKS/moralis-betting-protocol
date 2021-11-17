@@ -82,6 +82,7 @@ const menuItems = [
 function Chains() {
   const { switchNetwork } = useChain();
   const { chainId } = useMoralisDapp();
+  console.log(chainId);
   const [selected, setSelected] = useState({});
 
   useEffect(() => {
@@ -103,7 +104,7 @@ function Chains() {
           <span style={{ marginLeft: "5px" }}>{item.value}</span>
         </Menu.Item>
       ))}
-    </Menu> 
+    </Menu>
   );
 
   return (

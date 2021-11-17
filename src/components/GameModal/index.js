@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Steps, Typography, Button, Space } from "antd";
+import { Modal, Steps } from "antd";
 import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 import BurnToken from "./BurnToken";
 import DepositAsset from "./DepositAsset";
+import PlayGame from "./PlayGame";
 
 export default function GameModal(props) {
-  const { visible } = props;
+  const { visible, handleClose, isCreator } = props;
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
@@ -25,6 +26,7 @@ export default function GameModal(props) {
     }
     // eslint-disable-next-line
   }, [depositAsset]);
+
   return (
     <Modal
       title="Create New Game"
@@ -37,11 +39,17 @@ export default function GameModal(props) {
       <Steps current={currentIndex}>
         <Steps.Step
           title="Burn BET"
-          description="Burn your token to create game."
+          description={`Burn your token to ${
+            isCreator ? "create a game." : "challenge the game."
+          }`}
         />
         <Steps.Step
           title="Deposit ERC20"
-          description="Select your asset to place a bet on."
+          description={
+            isCreator
+              ? "Select your asset to place a bet on."
+              : "Deposit you asset before placing a bet."
+          }
         />
         <Steps.Step
           title="Try your luck!"
@@ -58,7 +66,9 @@ export default function GameModal(props) {
         {currentIndex === 0 && (
           <BurnToken
             sides={sides}
+            isCreator={isCreator}
             handleInputNumberChange={(value) => setSides(value)}
+            handleApprove={(res) => setDepositAsset(res)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
           />
         )}
@@ -67,21 +77,13 @@ export default function GameModal(props) {
             depositAsset={depositAsset}
             nativeTokenPrice={nativeTokenPrice}
             sides={sides}
+            isCreator={isCreator}
             handleSelect={(value) => setDepositAsset(value)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
           />
         )}
         {currentIndex === 2 && (
-          <Space direction="vertical" align="center" size="middle">
-            <Typography.Text>
-              If the sum of your bet result and your challenger's is <b>EVEN</b>
-              , you WIN!
-            </Typography.Text>
-            <Typography.Text>Otherwise, you LOSE</Typography.Text>
-            <Button type="primary" style={{ width: "100%" }}>
-              Bet now!
-            </Button>
-          </Space>
+          <PlayGame isCreator={isCreator} onCompleted={handleClose} />
         )}
       </div>
     </Modal>

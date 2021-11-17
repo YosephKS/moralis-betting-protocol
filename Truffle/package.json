@@ -14,7 +14,7 @@
     "console": "truffle console",
     "test": "truffle test",
     "migrate": "truffle migrate",
-    "verify": "truffle run verify"
+    "verify": "truffle run verify BettingGameRegistry ERC20Basic PriceConverter"
   },
   "devDependencies": {
     "@chainlink/test-helpers": "^0.0.7-alpha",

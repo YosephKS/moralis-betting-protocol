@@ -20,6 +20,7 @@ contract BettingGameRegistry is Ownable {
     );
 
     address public nativeTokenAddress;
+    address public priceConverterAddress;
     address internal vrfCoordinatorAddress;
     address internal linkTokenAddress;
     bytes32 internal keyHash;
@@ -29,12 +30,14 @@ contract BettingGameRegistry is Ownable {
 
     constructor(
         address _nativeTokenAddress,
+        address _priceConverterAddress,
         address _vrfCoordinatorAddress,
         address _linkTokenAddress,
         bytes32 _keyHash,
         uint256 _fee
     ) {
         nativeTokenAddress = _nativeTokenAddress;
+        priceConverterAddress = _priceConverterAddress;
         vrfCoordinatorAddress = _vrfCoordinatorAddress;
         linkTokenAddress = _linkTokenAddress;
         keyHash = _keyHash;
@@ -79,7 +82,8 @@ contract BettingGameRegistry is Ownable {
             fee,
             msg.sender,
             _sides,
-            nativeTokenAddress
+            nativeTokenAddress,
+            priceConverterAddress
         );
         bettingGameDataRegistry[bettingGameCount] = address(newBettingGame);
 

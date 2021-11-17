@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "../interfaces/IERC20Burnable.sol";
+import "../chainlink/PriceConverter.sol";
 
 contract BettingGame is VRFConsumerBase {
     using SafeMath for uint256;
@@ -30,7 +30,8 @@ contract BettingGame is VRFConsumerBase {
     BettingGameStatus public status;
     uint256 public expiryTime;
     address public nativeTokenAddress;
-    address depositTokenAddress;
+    address public depositTokenAddress;
+    address priceConverterAddress;
     address public winner;
 
     mapping(bytes32 => address) requestIdToAddressRegistry;
@@ -43,7 +44,8 @@ contract BettingGame is VRFConsumerBase {
         uint256 _fee,
         address _creator,
         uint256 _sides,
-        address _nativeTokenAddress
+        address _nativeTokenAddress,
+        address _priceConverterAddress
     ) VRFConsumerBase(_vrfCoordinatorAddress, _linkTokenAddress) {
         keyHash = _keyHash;
         fee = _fee;
@@ -53,6 +55,7 @@ contract BettingGame is VRFConsumerBase {
         status = BettingGameStatus.OPEN;
         expiryTime = block.timestamp + 30 minutes;
         nativeTokenAddress = _nativeTokenAddress;
+        priceConverterAddress = _priceConverterAddress;
         depositTokenAddress = address(0);
     }
 
@@ -220,17 +223,19 @@ contract BettingGame is VRFConsumerBase {
     /**
      * Handle depositing ERC20 token to the `BettingGame` contract
      */
-    function deposit(address _tokenAddress, address _aggregatorAddress)
-        public
-        onlyCreatorAndChallenger
-        onlyExpiredGame(false)
-    {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            _aggregatorAddress
-        );
+    function deposit(
+        address _tokenAddress,
+        address _baseAddress,
+        address _quoteAddress
+    ) public onlyCreatorAndChallenger onlyExpiredGame(false) {
+        PriceConverter priceFeed = PriceConverter(priceConverterAddress);
 
         // 1. Get Price Feeds Data from Chainlink
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+        int256 price = priceFeed.getDerivedPrice(
+            _baseAddress,
+            _quoteAddress,
+            18
+        );
 
         // 2. Transfer ERC20 token from user to the `BettingGame` contract
         IERC20 token = IERC20(_tokenAddress);

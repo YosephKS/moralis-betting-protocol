@@ -8,7 +8,11 @@ export default function Bets() {
 
   return (
     <>
-      <GameModal visible={visible} />
+      <GameModal
+        visible={visible}
+        handleClose={() => setVisible(false)}
+        isCreator
+      />
       <div style={{ width: "100%" }}>
         <div
           style={{
