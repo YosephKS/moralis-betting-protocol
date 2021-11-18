@@ -4,11 +4,11 @@ import { useWeb3Contract } from "hooks/useWeb3Contract";
 import BettingGameABI from "../../contracts/BettingGame.json";
 
 export default function PlayGame(props) {
-  const { onCompleted, bettingGameAddress, isCreator } = props;
+  const { onCompleted, isCreator } = props;
   const { abi: bettingGameABI } = BettingGameABI;
   const { runContractFunction, isLoading, isRunning } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: bettingGameAddress,
+    contractAddress: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
     functionName: "play",
     params: {},
   });

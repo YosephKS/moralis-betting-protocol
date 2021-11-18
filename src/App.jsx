@@ -5,6 +5,7 @@ import {
   Switch,
   Route,
   NavLink,
+  Redirect,
 } from "react-router-dom";
 import { Menu, Layout } from "antd";
 import "antd/dist/antd.css";
@@ -117,6 +118,9 @@ const App = () => {
           </Menu>
           <div style={styles.subcontent}>
             <Switch>
+              <Route exact path="/">
+                <Redirect to="/dashboard" />
+              </Route>
               <Route path="/dashboard">
                 <Dashboard />
               </Route>

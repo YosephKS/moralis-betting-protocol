@@ -33,7 +33,7 @@ export default function Bets() {
         <Row gutter={16}>
           <Col span={8}>
             <GameCard
-              cardTitle="0xb46bb2E9d9B55D5EAE10960EbBA27F966D9511d1"
+              cardTitle="0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E"
               sides={5}
               status={0}
               buttonText="Withdraw"

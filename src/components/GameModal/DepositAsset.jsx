@@ -51,7 +51,7 @@ export default function DepositAsset(props) {
     contractAddress: erc20TokenAddress[chainId][depositAsset],
     functionName: "approve",
     params: {
-      spender: "0x3d1Bad143cf20E12a7e29C89cDF702FD8228F332",
+      spender: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
       amount: depositAmount ?? 0,
     },
   });
@@ -62,7 +62,7 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x3d1Bad143cf20E12a7e29C89cDF702FD8228F332",
+    contractAddress: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
     functionName: "deposit",
     params: {
       _tokenAddress: erc20TokenAddress[chainId][depositAsset],
