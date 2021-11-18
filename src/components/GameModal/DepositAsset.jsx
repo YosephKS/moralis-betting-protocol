@@ -5,17 +5,21 @@ import ERC20ABI from "../../contracts/ERC20.json";
 import PriceConverterABI from "../../contracts/PriceConverter.json";
 import BettingGameABI from "../../contracts/BettingGame.json";
 import deployedContracts from "../../list/deployedContracts.json";
+import chainlinkPriceFeeds from "../../list/chainlinkPriceFeeds.json";
+import erc20TokenAddress from "../../list/erc20TokenAddress.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function DepositAsset(props) {
-  const { depositAsset, handleSelect, nativeTokenPrice, sides, handleNext } =
-    props;
+  const {
+    depositAsset,
+    handleSelect,
+    nativeTokenPrice,
+    sides,
+    handleNext,
+    bettingGameAddress,
+    isCreator,
+  } = props;
   const { chainId } = useMoralisDapp();
-  const tokenAddressList = {
-    uni: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-    link: "0xa36085F69e2889c224210F603D836748e7dC0088",
-    dai: "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa",
-  };
   const { abi: erc20ABI } = ERC20ABI;
   const { abi: priceConverterABI } = PriceConverterABI;
   const { abi: bettingGameABI } = BettingGameABI;
@@ -30,8 +34,8 @@ export default function DepositAsset(props) {
     contractAddress: deployedContracts[chainId].priceConverter,
     functionName: "getDerivedPrice",
     params: {
-      _base: "",
-      _quote: "",
+      _base: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
+      _quote: chainlinkPriceFeeds[chainId]["eth"]["usd"],
       _decimals: 18,
     },
   });
@@ -42,7 +46,7 @@ export default function DepositAsset(props) {
     isRunning: isApproveRunning,
   } = useWeb3Contract({
     abi: erc20ABI,
-    contractAddress: tokenAddressList[depositAsset],
+    contractAddress: erc20TokenAddress[chainId][depositAsset],
     functionName: "approve",
   });
 
@@ -52,11 +56,12 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
+    contractAddress: bettingGameAddress,
     functionName: "deposit",
     params: {
-      _tokenAddress: tokenAddressList[depositAsset],
-      _aggregatorAddress: "0xDA5904BdBfB4EF12a3955aEcA103F51dc87c7C39",
+      _tokenAddress: erc20TokenAddress[chainId][depositAsset],
+      _baseAddress: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
+      _quoteAddress: chainlinkPriceFeeds[chainId]["eth"]["usd"],
     },
   });
 
@@ -81,18 +86,22 @@ export default function DepositAsset(props) {
   return (
     <Space direction="vertical" size="middle">
       <Typography.Text style={{ fontSize: "20px" }}>
-        Choose ERC20 you want to deposit
+        {isCreator
+          ? "Choose ERC20 you want to deposit"
+          : "Deposit your ERC20 token"}
       </Typography.Text>
-      <Select
-        style={{ width: "100%" }}
-        value={depositAsset}
-        onChange={handleSelect}
-        disabled={isApproved}
-      >
-        <Select.Option value="uni">Uniswap (UNI)</Select.Option>
-        <Select.Option value="link">Chainlink (LINK)</Select.Option>
-        <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
-      </Select>
+      {isCreator && (
+        <Select
+          style={{ width: "100%" }}
+          value={depositAsset}
+          onChange={handleSelect}
+          disabled={isApproved}
+        >
+          <Select.Option value="uni">Uniswap (UNI)</Select.Option>
+          <Select.Option value="link">Chainlink (LINK)</Select.Option>
+          <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
+        </Select>
+      )}
       {depositAsset && (
         <Typography.Text style={{ fontSize: "16px" }}>
           You will deposit approximately{" "}
@@ -118,7 +127,7 @@ export default function DepositAsset(props) {
               onSuccess: (amount) => {
                 runApprove({
                   params: {
-                    spender: "0x7Fd119af008d6E34d4E55c6156A31B432D6359bA",
+                    spender: bettingGameAddress,
                     amount,
                   },
                   onSuccess: () => setIsApproved(true),

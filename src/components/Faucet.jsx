@@ -4,15 +4,16 @@ import { useMoralis } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import ERC20BasicABI from "../contracts/ERC20Basic.json";
+import deployedContracts from "../list/deployedContracts.json";
 
 export default function Faucet() {
   const [betValue, setBetValue] = useState(0);
   const { abi } = ERC20BasicABI;
   const { Moralis } = useMoralis();
-  const { walletAddress } = useMoralisDapp();
+  const { walletAddress, chainId } = useMoralisDapp();
   const { runContractFunction, isRunning, isLoading } = useWeb3Contract({
     abi,
-    contractAddress: "0x9ca6E4683371a99355c476Be3fc6CF4d31e67350",
+    contractAddress: deployedContracts[chainId].erc20Basic,
     functionName: "mint",
     params: {
       to: walletAddress,
@@ -61,7 +62,7 @@ export default function Faucet() {
           size="large"
           style={{ width: "25vw", marginTop: "2rem" }}
           onClick={() => runContractFunction()}
-          disabled={isRunning || isLoading}
+          disabled={isRunning || isLoading || betValue <= 0}
         >
           Request Testnet BET
         </Button>

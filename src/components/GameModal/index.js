@@ -11,6 +11,7 @@ export default function GameModal(props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
   const [depositAsset, setDepositAsset] = useState("");
+  const [bettingGameAddress, setBettingGameAddress] = useState("");
   const tokenAddressList = {
     uni: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
     link: "0x514910771af9ca656af840dff83e8264ecf986ca",
@@ -68,7 +69,7 @@ export default function GameModal(props) {
             sides={sides}
             isCreator={isCreator}
             handleInputNumberChange={(value) => setSides(value)}
-            handleApprove={(res) => setDepositAsset(res)}
+            handleApprove={(res) => setBettingGameAddress(res)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
           />
         )}
@@ -80,10 +81,15 @@ export default function GameModal(props) {
             isCreator={isCreator}
             handleSelect={(value) => setDepositAsset(value)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
+            bettingGameAddress={bettingGameAddress}
           />
         )}
         {currentIndex === 2 && (
-          <PlayGame isCreator={isCreator} onCompleted={handleClose} />
+          <PlayGame
+            isCreator={isCreator}
+            onCompleted={handleClose}
+            bettingGameAddress={bettingGameAddress}
+          />
         )}
       </div>
     </Modal>

@@ -23,7 +23,7 @@ export default function BurnToken(props) {
     contractAddress: deployedContracts[chainId].erc20Basic,
     functionName: "approve",
     params: {
-      spender: "0x112749001D291ecCE228123D2EBba0ef24661a49",
+      spender: deployedContracts[chainId].bettingGameRegistry,
       amount: Moralis.Units.Token(0.01 * sides, 18),
     },
   });

@@ -1,6 +1,6 @@
 {
     "0x2a": {
-        "erc20Basic": "0x980cc828eE651731a970e199253e8AaAbA212380",
+        "erc20Basic": "0x5b5a0aeB00b26cfE7D2151609Ff301510e0953c2",
         "bettingGameRegistry": "0x980cc828eE651731a970e199253e8AaAbA212380",
         "priceConverter": "0xbf90378341edFEd2EDA7f1936dc8AdFDb4eA567"
     },
