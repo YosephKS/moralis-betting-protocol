@@ -12,11 +12,11 @@ import "antd/dist/antd.css";
 import "./style.css";
 import Account from "components/Account";
 import Chains from "components/Chains";
-import Holdings from "components/Holdings";
+import Holdings from "pages/Me/Holdings";
 import NativeBalance from "components/NativeBalance";
-import Dashboard from "components/Dashboard";
-import Faucet from "components/Faucet";
-import Bets from "components/Bets";
+import Dashboard from "pages/Dashboard";
+import Faucet from "pages/Faucet";
+import Bets from "pages/Me/Bets";
 
 const styles = {
   content: {

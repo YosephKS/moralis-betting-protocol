@@ -26,6 +26,9 @@ export default function DepositAsset(props) {
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
 
+  /**
+   * @description Get pricing for ETH/BSC/MATIC to UNI/LINK/DAI
+   */
   const {
     contractResponse: depositAmount,
     runContractFunction: runGetPriceConverter,
@@ -42,6 +45,9 @@ export default function DepositAsset(props) {
     },
   });
 
+  /**
+   * @description Approve ERC20 token before depositing into smart contract
+   */
   const {
     runContractFunction: runApprove,
     isLoading: isApproveLoading,
@@ -56,6 +62,9 @@ export default function DepositAsset(props) {
     },
   });
 
+  /**
+   * @description Deposit ERC20 token to BettingGame smart contract
+   */
   const {
     runContractFunction: runDeposit,
     isLoading: isDepositLoading,
@@ -103,6 +112,11 @@ export default function DepositAsset(props) {
           ? "Choose ERC20 you want to deposit"
           : "Deposit your ERC20 token"}
       </Typography.Text>
+      {!isCreator && (
+        <Typography.Text>
+          Prepare some <b>UNI</b> before depositing it.
+        </Typography.Text>
+      )}
       {isCreator && (
         <Select
           style={{ width: "100%" }}

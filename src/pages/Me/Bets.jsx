@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Typography, Row, Col, Button } from "antd";
-import GameCard from "./GameCard";
-import GameModal from "./GameModal";
+import GameCard from "../../components/GameCard";
+import GameModal from "../../components/GameModal";
 
 export default function Bets() {
   const [visible, setVisible] = useState(false);

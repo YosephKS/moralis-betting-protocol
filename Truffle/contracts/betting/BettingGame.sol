@@ -145,6 +145,15 @@ contract BettingGame is VRFConsumerBase {
         );
     }
 
+    function getPlayerBettingResult()
+        public
+        view
+        onlyCreatorAndChallenger
+        returns (uint256, bool)
+    {
+        return (playerBetRecordRegistry[msg.sender], msg.sender == winner);
+    }
+
     /**
      * Allow `_msgSend` address to register as a challenger
      */

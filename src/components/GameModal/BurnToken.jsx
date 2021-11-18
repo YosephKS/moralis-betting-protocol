@@ -4,16 +4,29 @@ import { useMoralis } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20BasicABI from "../../contracts/ERC20Basic.json";
 import BettingGameRegistryABI from "../../contracts/BettingGameRegistry.json";
+import BettingGameABI from "../../contracts/BettingGame.json";
 import deployedContracts from "../../list/deployedContracts.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function BurnToken(props) {
-  const { sides, handleInputNumberChange, handleApprove, handleNext } = props;
+  const {
+    sides,
+    bettingGameAddress,
+    handleInputNumberChange,
+    handleApprove,
+    handleNext,
+    isCreator,
+  } = props;
   const { chainId } = useMoralisDapp();
   const { abi: erc20BasicABI } = ERC20BasicABI;
   const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
+  const { abi: bettingGameABI } = BettingGameABI;
   const { Moralis } = useMoralis();
   const [isApproved, setIsApproved] = useState(false);
+
+  /**
+   * @description Approve ERC20 token before burning it
+   */
   const {
     runContractFunction: runApprove,
     isLoading: isApproveLoading,
@@ -28,8 +41,10 @@ export default function BurnToken(props) {
     },
   });
 
+  /**
+   * @description Create a new Betting Game as a Creator
+   */
   const {
-    contractResponse,
     runContractFunction: runCreateGame,
     isLoading: isCreateGameLoading,
     isRunning: isCreateGameRunning,
@@ -42,40 +57,70 @@ export default function BurnToken(props) {
     },
   });
 
-  console.log(contractResponse);
+  /**
+   * @description Register Address as Challenger for the Game
+   */
+  const {
+    runContractFunction: runChallenge,
+    isLoading: isChallengeLoading,
+    isRunning: isChallengeRunning,
+  } = useWeb3Contract({
+    abi: bettingGameABI,
+    contractAddress: bettingGameAddress ?? "",
+    functionName: "challenge",
+    params: {},
+  });
 
   const disableButton = useMemo(
     () =>
       isApproveLoading ||
       isApproveRunning ||
       isCreateGameLoading ||
-      isCreateGameRunning,
+      isCreateGameRunning ||
+      isChallengeLoading ||
+      isChallengeRunning,
     [
       isApproveLoading,
       isApproveRunning,
       isCreateGameLoading,
       isCreateGameRunning,
+      isChallengeLoading,
+      isChallengeRunning,
     ]
   );
 
   return (
     <Space direction="vertical" size="middle" style={{ fontSize: "16px" }}>
-      <Typography.Text>Choose the number of sides</Typography.Text>
-      <InputNumber
-        min={1}
-        value={sides}
-        onChange={handleInputNumberChange}
-        style={{ width: "100%" }}
-        disabled={isApproved}
-      />
+      {isCreator ? (
+        <>
+          <Typography.Text>Choose the number of sides</Typography.Text>
+          <InputNumber
+            min={1}
+            value={sides}
+            onChange={handleInputNumberChange}
+            style={{ width: "100%" }}
+            disabled={isApproved}
+          />
+        </>
+      ) : (
+        <Typography.Text>
+          Burn your token to participate as a Challenger
+        </Typography.Text>
+      )}
       <Button
         type="primary"
         disabled={disableButton}
         onClick={() => {
           if (isApproved) {
-            runCreateGame({
-              onSuccess: () => handleNext(),
-            });
+            if (isCreator) {
+              runCreateGame({
+                onSuccess: () => handleNext(),
+              });
+            } else {
+              runChallenge({
+                onSuccess: () => handleNext(),
+              });
+            }
           } else {
             runApprove({
               onSuccess: (result) => {
