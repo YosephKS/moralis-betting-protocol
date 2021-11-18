@@ -151,22 +151,26 @@ export default function CardIndex(props) {
                 Expiry Time
               </Typography.Text>
               <Typography.Text>{contractResponse[4]}</Typography.Text>
-              <Typography.Text
-                type="secondary"
-                style={{ fontSize: "16px", marginTop: "1rem" }}
-              >
-                Deposit Asset
-              </Typography.Text>
-              <Typography.Text>
-                <a
-                  target="_blank"
-                  rel="noreferrer"
-                  href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[5]}`}
-                >
-                  {contractResponse[5]}
-                </a>
-              </Typography.Text>
-
+              {contractResponse[5] !==
+                "0x0000000000000000000000000000000000000000" && (
+                <>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: "16px", marginTop: "1rem" }}
+                  >
+                    Deposit Asset
+                  </Typography.Text>
+                  <Typography.Text>
+                    <a
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[5]}`}
+                    >
+                      {contractResponse[5]}
+                    </a>
+                  </Typography.Text>
+                </>
+              )}
               {contractResponse[6] !==
                 "0x0000000000000000000000000000000000000000" && (
                 <>

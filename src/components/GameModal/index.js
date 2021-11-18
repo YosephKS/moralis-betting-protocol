@@ -69,7 +69,7 @@ export default function GameModal(props) {
             sides={sides}
             isCreator={isCreator}
             handleInputNumberChange={(value) => setSides(value)}
-            handleApprove={(res) => setBettingGameAddress(res)}
+            handleBettingGameAddress={(res) => setBettingGameAddress(res)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
           />
         )}

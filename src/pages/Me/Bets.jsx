@@ -1,10 +1,30 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Typography, Row, Col, Button } from "antd";
+import { useMoralisQuery } from "react-moralis";
 import GameCard from "../../components/GameCard";
 import GameModal from "../../components/GameModal";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function Bets() {
   const [visible, setVisible] = useState(false);
+  const { walletAddress } = useMoralisDapp();
+  const { data } = useMoralisQuery(
+    "BettingGameCreatedKovan",
+    (query) =>
+      query.equalTo("creator", walletAddress ?? "").descending("bettingGameId"),
+    [],
+    {
+      live: true,
+    }
+  );
+
+  const bettingGameData = useMemo(() => {
+    return data.map((d) => {
+      const { attributes } = d || {};
+      const { bettingGameAddress } = attributes || {};
+      return bettingGameAddress;
+    });
+  }, [data]);
 
   return (
     <>
@@ -31,14 +51,13 @@ export default function Bets() {
           </Button>
         </div>
         <Row gutter={16}>
-          <Col span={8}>
-            <GameCard
-              cardTitle="0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E"
-              sides={5}
-              status={0}
-              buttonText="Withdraw"
-            />
-          </Col>
+          {bettingGameData.map((address) => {
+            return (
+              <Col span={8}>
+                <GameCard cardTitle={address} />
+              </Col>
+            );
+          })}
         </Row>
       </div>
     </>

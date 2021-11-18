@@ -1,47 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Typography, Row, Col } from "antd";
 import GameCard from "../components/GameCard";
 import GameModal from "components/GameModal";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import { useMoralisQuery } from "react-moralis";
 
 const styles = {
   wrapper: {
+    width: "100%",
+  },
+  title: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    width: "100%",
   },
 };
 
 export default function Dashboard() {
   const [visible, setVisible] = useState(false);
+  const { walletAddress } = useMoralisDapp();
+  const { data } = useMoralisQuery(
+    "BettingGameCreatedKovan",
+    (query) => query.notEqualTo("creator", walletAddress ?? ""),
+    [],
+    {
+      live: true,
+    }
+  );
+
+  const bettingGameData = useMemo(() => {
+    return data.map((d) => {
+      const { attributes } = d || {};
+      const { bettingGameAddress } = attributes || {};
+      return bettingGameAddress;
+    });
+  }, [data]);
 
   return (
     <>
       <GameModal visible={visible} handleClose={() => setVisible()} />
       <div style={styles.wrapper}>
-        <Typography.Title level={1}>Place d'BET. Win d'Game.</Typography.Title>
-        <Typography.Text style={{ fontSize: "20px" }}>
-          Try your luck fairly in a fairer and more trustless manner.
-        </Typography.Text>
+        <div style={styles.title}>
+          <Typography.Title level={1}>
+            Place d'BET. Win d'Game.
+          </Typography.Title>
+          <Typography.Text style={{ fontSize: "20px" }}>
+            Try your luck fairly in a fairer and more trustless manner.
+          </Typography.Text>
+        </div>
         <Row gutter={16} style={{ marginTop: "2rem" }}>
-          <Col span={8}>
-            <GameCard
-              cardTitle="0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E"
-              handleChallenge={() => setVisible(true)}
-            />
-          </Col>
-          <Col span={8}>
-            <GameCard
-              cardTitle="0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E"
-              handleChallenge={() => {}}
-            />
-          </Col>
-          <Col span={8}>
-            <GameCard
-              cardTitle="0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E"
-              handleChallenge={() => {}}
-            />
-          </Col>
+          {bettingGameData.map((address) => {
+            return (
+              <Col span={8}>
+                <GameCard cardTitle={address} />
+              </Col>
+            );
+          })}
         </Row>
       </div>
     </>

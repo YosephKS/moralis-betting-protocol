@@ -13,7 +13,7 @@ export default function BurnToken(props) {
     sides,
     bettingGameAddress,
     handleInputNumberChange,
-    handleApprove,
+    // handleBettingGameAddress,
     handleNext,
     isCreator,
   } = props;
@@ -114,7 +114,11 @@ export default function BurnToken(props) {
           if (isApproved) {
             if (isCreator) {
               runCreateGame({
-                onSuccess: () => handleNext(),
+                onSuccess: (result) => {
+                  console.log(result);
+                  // handleBettingGameAddress
+                  handleNext();
+                },
               });
             } else {
               runChallenge({
@@ -124,7 +128,6 @@ export default function BurnToken(props) {
           } else {
             runApprove({
               onSuccess: (result) => {
-                handleApprove(result);
                 setIsApproved(true);
               },
             });
