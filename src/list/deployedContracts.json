@@ -1,8 +1,8 @@
 {
     "0x2a": {
-        "erc20Basic": "0x5b5a0aeB00b26cfE7D2151609Ff301510e0953c2",
-        "bettingGameRegistry": "0x980cc828eE651731a970e199253e8AaAbA212380",
-        "priceConverter": "0xbf90378341edFEd2EDA7f1936dc8AdFDb4eA567"
+        "erc20Basic": "0xe113270ff2B384AfEC8220266704E6197f90b387",
+        "bettingGameRegistry": "0x648d3cd7EC54Ce8759E3d44B035626d95033e549",
+        "priceConverter": "0x9A61A5f5752e653a49Df18Ad2eee278c63CfdCDf"
     },
     "0x61": {},
     "0x13881": {}

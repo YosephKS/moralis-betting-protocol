@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "../interfaces/IERC20Burnable.sol";
-import "../chainlink/PriceConverter.sol";
+import "../interfaces/IPriceConverter.sol";
 
 contract BettingGame is VRFConsumerBase {
     using SafeMath for uint256;
@@ -228,7 +228,7 @@ contract BettingGame is VRFConsumerBase {
         address _baseAddress,
         address _quoteAddress
     ) public onlyCreatorAndChallenger onlyExpiredGame(false) {
-        PriceConverter priceFeed = PriceConverter(priceConverterAddress);
+        IPriceConverter priceFeed = IPriceConverter(priceConverterAddress);
 
         // 1. Get Price Feeds Data from Chainlink
         int256 price = priceFeed.getDerivedPrice(

@@ -10,7 +10,7 @@ export default function GameModal(props) {
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
-  const [depositAsset, setDepositAsset] = useState("");
+  const [depositAsset, setDepositAsset] = useState("eth");
   const [bettingGameAddress, setBettingGameAddress] = useState("");
   const tokenAddressList = {
     uni: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
@@ -19,7 +19,7 @@ export default function GameModal(props) {
   };
 
   useEffect(() => {
-    if (depositAsset !== "") {
+    if (depositAsset && depositAsset !== "eth") {
       fetchNativeTokenPrice({
         address: tokenAddressList[depositAsset],
         exchange: "uniswap-v3",

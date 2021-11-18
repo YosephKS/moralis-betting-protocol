@@ -8,6 +8,7 @@ import deployedContracts from "../../list/deployedContracts.json";
 import chainlinkPriceFeeds from "../../list/chainlinkPriceFeeds.json";
 import erc20TokenAddress from "../../list/erc20TokenAddress.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import { useEffect } from "react/cjs/react.development";
 
 export default function DepositAsset(props) {
   const {
@@ -16,7 +17,7 @@ export default function DepositAsset(props) {
     nativeTokenPrice,
     sides,
     handleNext,
-    bettingGameAddress,
+    // bettingGameAddress,
     isCreator,
   } = props;
   const { chainId } = useMoralisDapp();
@@ -26,6 +27,7 @@ export default function DepositAsset(props) {
   const [isApproved, setIsApproved] = useState(false);
 
   const {
+    contractResponse: depositAmount,
     runContractFunction: runGetPriceConverter,
     isLoading: isPriceConverterLoading,
     isRunning: isPriceConverterRunning,
@@ -34,8 +36,8 @@ export default function DepositAsset(props) {
     contractAddress: deployedContracts[chainId].priceConverter,
     functionName: "getDerivedPrice",
     params: {
-      _base: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
-      _quote: chainlinkPriceFeeds[chainId]["eth"]["usd"],
+      _base: chainlinkPriceFeeds[chainId]["eth"]["usd"],
+      _quote: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
       _decimals: 18,
     },
   });
@@ -48,6 +50,10 @@ export default function DepositAsset(props) {
     abi: erc20ABI,
     contractAddress: erc20TokenAddress[chainId][depositAsset],
     functionName: "approve",
+    params: {
+      spender: "0x3d1Bad143cf20E12a7e29C89cDF702FD8228F332",
+      amount: depositAmount ?? 0,
+    },
   });
 
   const {
@@ -56,12 +62,12 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: bettingGameAddress,
+    contractAddress: "0x3d1Bad143cf20E12a7e29C89cDF702FD8228F332",
     functionName: "deposit",
     params: {
       _tokenAddress: erc20TokenAddress[chainId][depositAsset],
-      _baseAddress: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
-      _quoteAddress: chainlinkPriceFeeds[chainId]["eth"]["usd"],
+      _baseAddress: chainlinkPriceFeeds[chainId]["eth"]["usd"],
+      _quoteAddress: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
     },
   });
 
@@ -83,6 +89,13 @@ export default function DepositAsset(props) {
     ]
   );
 
+  useEffect(() => {
+    if (depositAsset !== "eth") {
+      runGetPriceConverter();
+    }
+    // eslint-disable-next-line
+  }, [depositAsset]);
+
   return (
     <Space direction="vertical" size="middle">
       <Typography.Text style={{ fontSize: "20px" }}>
@@ -93,7 +106,7 @@ export default function DepositAsset(props) {
       {isCreator && (
         <Select
           style={{ width: "100%" }}
-          value={depositAsset}
+          value={depositAsset === "eth" ? "" : depositAsset}
           onChange={handleSelect}
           disabled={isApproved}
         >
@@ -102,7 +115,7 @@ export default function DepositAsset(props) {
           <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
         </Select>
       )}
-      {depositAsset && (
+      {depositAsset !== "eth" && (
         <Typography.Text style={{ fontSize: "16px" }}>
           You will deposit approximately{" "}
           <b>
@@ -123,16 +136,8 @@ export default function DepositAsset(props) {
           if (isApproved) {
             runDeposit({ onSuccess: () => handleNext() });
           } else {
-            runGetPriceConverter({
-              onSuccess: (amount) => {
-                runApprove({
-                  params: {
-                    spender: bettingGameAddress,
-                    amount,
-                  },
-                  onSuccess: () => setIsApproved(true),
-                });
-              },
+            runApprove({
+              onSuccess: () => setIsApproved(true),
             });
           }
         }}

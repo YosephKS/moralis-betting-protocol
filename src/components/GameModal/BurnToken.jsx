@@ -29,6 +29,7 @@ export default function BurnToken(props) {
   });
 
   const {
+    contractResponse,
     runContractFunction: runCreateGame,
     isLoading: isCreateGameLoading,
     isRunning: isCreateGameRunning,
@@ -40,6 +41,8 @@ export default function BurnToken(props) {
       _sides: sides,
     },
   });
+
+  console.log(contractResponse);
 
   const disableButton = useMemo(
     () =>
