@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Steps } from "antd";
+import { useMoralisQuery } from "react-moralis";
 import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 import BurnToken from "./BurnToken";
 import DepositAsset from "./DepositAsset";
 import PlayGame from "./PlayGame";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import erc20TokenAddress from "../../list/erc20TokenAddress";
+import ShowResult from "./ShowResult";
 
 export default function GameModal(props) {
   const { visible, handleClose, isCreator, initialValues } = props;
@@ -22,11 +24,22 @@ export default function GameModal(props) {
   const [sides, setSides] = useState(1);
   const [depositAsset, setDepositAsset] = useState("eth");
   const [bettingGameAddress, setBettingGameAddress] = useState("");
+  const [createGameTransactionHash, setCreateGameTransactionHash] =
+    useState("");
   const tokenAddressList = {
     uni: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
     link: "0x514910771af9ca656af840dff83e8264ecf986ca",
     dai: "0x6b175474e89094c44da98b954eedeac495271d0f",
   };
+
+  const { data } = useMoralisQuery(
+    "BettingGameCreatedKovan",
+    (query) => query.equalTo("transaction_hash", createGameTransactionHash),
+    [createGameTransactionHash],
+    {
+      live: true,
+    }
+  );
 
   useEffect(() => {
     if (depositAsset && depositAsset !== "eth") {
@@ -52,7 +65,7 @@ export default function GameModal(props) {
     ) {
       const getDepositAsset = Object.keys(erc20TokenAddress[chainId]).find(
         (erc20) =>
-          erc20TokenAddress[chainId][erc20] ===
+          erc20TokenAddress[chainId][erc20].toLowerCase() ===
           initialDepositAsset.toLowerCase()
       );
       setDepositAsset(getDepositAsset);
@@ -63,9 +76,14 @@ export default function GameModal(props) {
   useEffect(() => {
     if (initialBettingGameAddress) {
       setBettingGameAddress(initialBettingGameAddress);
+    } else if (data && data?.length === 1) {
+      const { attributes } = data[0];
+      const { bettingGameAddress: res } = attributes;
+      setBettingGameAddress(res);
+      setCurrentIndex(1);
     }
     // eslint-disable-next-line
-  }, [bettingGameAddress]);
+  }, [bettingGameAddress, data]);
 
   return (
     <Modal
@@ -108,9 +126,11 @@ export default function GameModal(props) {
             sides={sides}
             isCreator={isCreator}
             handleInputNumberChange={(value) => setSides(value)}
-            handleBettingGameAddress={(res) => setBettingGameAddress(res)}
-            handleNext={() => setCurrentIndex((i) => i + 1)}
+            handleBettingGameAddress={(res) =>
+              setCreateGameTransactionHash(res ?? "")
+            }
             bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
+            handleNext={() => setCurrentIndex((i) => i + 1)}
           />
         )}
         {currentIndex === 1 && (
@@ -127,8 +147,15 @@ export default function GameModal(props) {
         {currentIndex === 2 && (
           <PlayGame
             isCreator={isCreator}
-            onCompleted={handleClose}
+            handleNext={() => setCurrentIndex((i) => i + 1)}
             bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
+          />
+        )}
+        {currentIndex === 3 && (
+          <ShowResult
+            isCreator={isCreator}
+            handleClose={handleClose}
+            bettingGameAddress={bettingGameAddress}
           />
         )}
       </div>

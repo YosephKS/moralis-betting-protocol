@@ -17,7 +17,7 @@ export default function DepositAsset(props) {
     nativeTokenPrice,
     sides,
     handleNext,
-    // bettingGameAddress,
+    bettingGameAddress,
     isCreator,
   } = props;
   const { chainId } = useMoralisDapp();
@@ -45,8 +45,6 @@ export default function DepositAsset(props) {
     },
   });
 
-  console.log(depositAsset);
-
   /**
    * @description Approve ERC20 token before depositing into smart contract
    */
@@ -59,7 +57,7 @@ export default function DepositAsset(props) {
     contractAddress: erc20TokenAddress[chainId][depositAsset],
     functionName: "approve",
     params: {
-      spender: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
+      spender: bettingGameAddress,
       amount: depositAmount ?? 0,
     },
   });
@@ -73,7 +71,7 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
+    contractAddress: bettingGameAddress,
     functionName: "deposit",
     params: {
       _tokenAddress: erc20TokenAddress[chainId][depositAsset],
@@ -108,7 +106,11 @@ export default function DepositAsset(props) {
   }, [depositAsset]);
 
   return (
-    <Space direction="vertical" size="middle">
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ display: "flex", alignItems: "center" }}
+    >
       <Typography.Text style={{ fontSize: "20px" }}>
         {isCreator
           ? "Choose ERC20 you want to deposit"
@@ -122,7 +124,7 @@ export default function DepositAsset(props) {
       )}
       {isCreator && (
         <Select
-          style={{ width: "100%" }}
+          style={{ minWidth: "200px" }}
           value={depositAsset === "eth" ? "" : depositAsset}
           onChange={handleSelect}
           disabled={isApproved}

@@ -28,6 +28,7 @@ export default function Bets() {
 
   return (
     <>
+      <Button onClick={fetch}>Test</Button>
       <GameModal
         visible={visible}
         handleClose={() => setVisible(false)}
@@ -50,15 +51,21 @@ export default function Bets() {
             Create Game
           </Button>
         </div>
-        <Row gutter={16}>
-          {bettingGameData.map((address) => {
-            return (
-              <Col span={8}>
-                <GameCard cardTitle={address} />
-              </Col>
-            );
-          })}
-        </Row>
+        {bettingGameData && bettingGameData?.length > 0 ? (
+          <Row gutter={16}>
+            {bettingGameData.map((address) => {
+              return (
+                <Col span={8}>
+                  <GameCard cardTitle={address} />
+                </Col>
+              );
+            })}
+          </Row>
+        ) : (
+          <Typography.Text style={{ fontSize: "16px" }}>
+            You have not created any game yet.
+          </Typography.Text>
+        )}
       </div>
     </>
   );

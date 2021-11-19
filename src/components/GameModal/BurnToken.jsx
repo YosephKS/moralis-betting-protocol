@@ -13,7 +13,7 @@ export default function BurnToken(props) {
     sides,
     bettingGameAddress,
     handleInputNumberChange,
-    // handleBettingGameAddress,
+    handleBettingGameAddress,
     handleNext,
     isCreator,
   } = props;
@@ -118,9 +118,8 @@ export default function BurnToken(props) {
             if (isCreator) {
               runCreateGame({
                 onSuccess: (result) => {
-                  console.log(result);
-                  // handleBettingGameAddress
-                  handleNext();
+                  const { transactionHash } = result;
+                  handleBettingGameAddress(transactionHash);
                 },
               });
             } else {

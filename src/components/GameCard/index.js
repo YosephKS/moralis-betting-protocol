@@ -83,12 +83,15 @@ export default function CardIndex(props) {
   useEffect(() => {
     runGetBettingGameInfo();
     // eslint-disable-next-line
-  }, [cardTitle]);
-
-  console.log(contractResponse);
+  }, []);
 
   return (
-    <Card title={getEllipsisTxt(cardTitle, 15)} bordered hoverable>
+    <Card
+      title={getEllipsisTxt(cardTitle, 15)}
+      bordered
+      hoverable
+      style={{ marginBottom: "2rem" }}
+    >
       <Skeleton loading={isFetching}>
         {contractResponse && Object.keys(contractResponse).length === 7 ? (
           <>
@@ -177,7 +180,7 @@ export default function CardIndex(props) {
                       {Object.keys(erc20TokenAddress[chainId])
                         .find(
                           (erc20) =>
-                            erc20TokenAddress[chainId][erc20] ===
+                            erc20TokenAddress[chainId][erc20].toLowerCase() ===
                             contractResponse[5].toLowerCase()
                         )
                         .toUpperCase()}
