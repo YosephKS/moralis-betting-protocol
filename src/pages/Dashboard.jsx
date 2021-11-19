@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { Typography, Row, Col, Space } from "antd";
+import { useMoralis, useMoralisQuery } from "react-moralis";
 import GameCard from "../components/GameCard";
 import GameModal from "components/GameModal";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
-import { useMoralisQuery } from "react-moralis";
-import { useEffect } from "react/cjs/react.development";
 
 const styles = {
   wrapper: {
@@ -21,17 +20,15 @@ const styles = {
 export default function Dashboard() {
   const [visible, setVisible] = useState(false);
   const [initialModalValues, setInitialModalValues] = useState({});
+  const { isInitalized } = useMoralis();
   const { walletAddress } = useMoralisDapp();
-  const { data, fetch } = useMoralisQuery(
+  const { data } = useMoralisQuery(
     "BettingGameCreatedKovan",
     (query) =>
-      query
-        .notEqualTo("creator", walletAddress ?? "")
-        .descending("bettingGameId"),
-    [],
+      query.notEqualTo("creator", walletAddress).descending("bettingGameId"),
+    [walletAddress, isInitalized],
     {
       live: true,
-      autoFetch: false,
     }
   );
 
@@ -42,11 +39,6 @@ export default function Dashboard() {
       return bettingGameAddress;
     });
   }, [data]);
-
-  useEffect(() => {
-    fetch();
-    // eslint-disable-next-line
-  }, []);
 
   return (
     <>

@@ -8787,12 +8787,12 @@
         }
       },
       "links": {},
-      "address": "0xe113270ff2B384AfEC8220266704E6197f90b387",
-      "transactionHash": "0x11ec40759b03846f415e7c1240d78390b73a80b45a7a9b0b1246040165f55483"
+      "address": "0xBF7Eb55575bE9166A9aa81Cb73a729c541072DCD",
+      "transactionHash": "0x249433eb520ab7442a5c42d6dafd061060cbf15ba4562f198d618fb021b792a1"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-18T10:11:13.433Z",
+  "updatedAt": "2021-11-19T13:45:50.846Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

@@ -33,6 +33,7 @@ contract BettingGame is VRFConsumerBase {
     address public depositTokenAddress;
     address priceConverterAddress;
     address public winner;
+    bool public isWithdrawn;
 
     mapping(bytes32 => address) requestIdToAddressRegistry;
     mapping(address => uint256) public playerBetRecordRegistry;
@@ -113,6 +114,14 @@ contract BettingGame is VRFConsumerBase {
         _;
     }
 
+    modifier onlyNotWithdrawn() {
+        require(
+            isWithdrawn == false,
+            "The fund in this game has been withdrawn!"
+        );
+        _;
+    }
+
     /**
      * Making sure that the function has only access to the winner
      */
@@ -121,6 +130,9 @@ contract BettingGame is VRFConsumerBase {
         _;
     }
 
+    /**
+     * Get Betting Game all public info
+     */
     function getBettingGameInfo()
         public
         view
@@ -131,7 +143,10 @@ contract BettingGame is VRFConsumerBase {
             BettingGameStatus,
             uint256,
             address,
-            address
+            address,
+            bool,
+            uint256,
+            uint256
         )
     {
         return (
@@ -141,17 +156,11 @@ contract BettingGame is VRFConsumerBase {
             status,
             expiryTime,
             depositTokenAddress,
-            winner
+            winner,
+            isWithdrawn,
+            playerBetRecordRegistry[creator],
+            playerBetRecordRegistry[challenger]
         );
-    }
-
-    function getPlayerBettingResult()
-        public
-        view
-        onlyCreatorAndChallenger
-        returns (uint256, bool)
-    {
-        return (playerBetRecordRegistry[msg.sender], msg.sender == winner);
     }
 
     /**
@@ -270,11 +279,14 @@ contract BettingGame is VRFConsumerBase {
         onlyCreatorAndChallenger
         onlyExpiredGame(true)
         onlyWinner
+        onlyNotWithdrawn
     {
         IERC20 token = IERC20(depositTokenAddress);
         uint256 tokenAmount = token.balanceOf(address(this));
         token.safeTransfer(msg.sender, tokenAmount);
 
         emit Withdraw(msg.sender, depositTokenAddress, tokenAmount);
+
+        isWithdrawn = true;
     }
 }

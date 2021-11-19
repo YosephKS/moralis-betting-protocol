@@ -1,18 +1,19 @@
 import React, { useMemo, useState } from "react";
 import { Typography, Row, Col, Button } from "antd";
-import { useMoralisQuery } from "react-moralis";
+import { useMoralis, useMoralisQuery } from "react-moralis";
 import GameCard from "../../components/GameCard";
 import GameModal from "../../components/GameModal";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 
 export default function Bets() {
   const [visible, setVisible] = useState(false);
+  const { isInitialized } = useMoralis();
   const { walletAddress } = useMoralisDapp();
   const { data } = useMoralisQuery(
     "BettingGameCreatedKovan",
     (query) =>
-      query.equalTo("creator", walletAddress ?? "").descending("bettingGameId"),
-    [],
+      query.equalTo("creator", walletAddress).descending("bettingGameId"),
+    [walletAddress, isInitialized],
     {
       live: true,
     }
@@ -28,7 +29,6 @@ export default function Bets() {
 
   return (
     <>
-      <Button onClick={fetch}>Test</Button>
       <GameModal
         visible={visible}
         handleClose={() => setVisible(false)}

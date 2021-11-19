@@ -54,6 +54,9 @@ contract BettingGameRegistry is Ownable {
         _;
     }
 
+    /**
+     * Get Betting Game Address by `bettingGameId`
+     */
     function getBettingGameById(uint256 _bettingGameId)
         public
         view
@@ -62,6 +65,9 @@ contract BettingGameRegistry is Ownable {
         return bettingGameDataRegistry[_bettingGameId];
     }
 
+    /**
+     * Set Native Token Address (only owner access)
+     */
     function setNativeTokenAddress(address newNativeTokenAddress)
         public
         onlyOwner
@@ -69,6 +75,9 @@ contract BettingGameRegistry is Ownable {
         nativeTokenAddress = newNativeTokenAddress;
     }
 
+    /**
+     * Create new `BettingGame` instance
+     */
     function createGame(uint256 _sides) public {
         // 1. Burn some token
         IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);

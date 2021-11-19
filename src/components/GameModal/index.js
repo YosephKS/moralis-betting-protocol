@@ -5,9 +5,9 @@ import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 import BurnToken from "./BurnToken";
 import DepositAsset from "./DepositAsset";
 import PlayGame from "./PlayGame";
+import ShowResult from "./ShowResult";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import erc20TokenAddress from "../../list/erc20TokenAddress";
-import ShowResult from "./ShowResult";
 
 export default function GameModal(props) {
   const { visible, handleClose, isCreator, initialValues } = props;
@@ -22,7 +22,7 @@ export default function GameModal(props) {
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
-  const [depositAsset, setDepositAsset] = useState("eth");
+  const [depositAsset, setDepositAsset] = useState("native");
   const [bettingGameAddress, setBettingGameAddress] = useState("");
   const [createGameTransactionHash, setCreateGameTransactionHash] =
     useState("");
@@ -42,10 +42,23 @@ export default function GameModal(props) {
   );
 
   useEffect(() => {
-    if (depositAsset && depositAsset !== "eth") {
+    if (depositAsset && depositAsset !== "native") {
+      const exchange = () => {
+        switch (chainId) {
+          case "0x2a":
+            return "uniswap-v3";
+          case "0x61":
+            return "pancakeswap-v2";
+          case "0x13881":
+            return "quickswap";
+          default:
+            return "uniswap-v3";
+        }
+      };
+
       fetchNativeTokenPrice({
         address: tokenAddressList[depositAsset],
-        exchange: "uniswap-v3",
+        exchange: exchange(),
       });
     }
     // eslint-disable-next-line
@@ -76,7 +89,7 @@ export default function GameModal(props) {
   useEffect(() => {
     if (initialBettingGameAddress) {
       setBettingGameAddress(initialBettingGameAddress);
-    } else if (data && data?.length === 1) {
+    } else if (data && data?.length === 1 && bettingGameAddress === "") {
       const { attributes } = data[0];
       const { bettingGameAddress: res } = attributes;
       setBettingGameAddress(res);

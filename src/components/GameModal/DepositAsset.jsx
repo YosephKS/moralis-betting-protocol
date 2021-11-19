@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, Select, Button } from "antd";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20ABI from "../../contracts/ERC20.json";
@@ -8,7 +8,7 @@ import deployedContracts from "../../list/deployedContracts.json";
 import chainlinkPriceFeeds from "../../list/chainlinkPriceFeeds.json";
 import erc20TokenAddress from "../../list/erc20TokenAddress.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
-import { useEffect } from "react/cjs/react.development";
+import { networkConfigs } from "helpers/networks";
 
 export default function DepositAsset(props) {
   const {
@@ -39,7 +39,7 @@ export default function DepositAsset(props) {
     contractAddress: deployedContracts[chainId].priceConverter,
     functionName: "getDerivedPrice",
     params: {
-      _base: chainlinkPriceFeeds[chainId]?.eth?.usd,
+      _base: chainlinkPriceFeeds[chainId]?.native?.usd,
       _quote: chainlinkPriceFeeds[chainId][depositAsset]?.usd,
       _decimals: 18,
     },
@@ -75,7 +75,7 @@ export default function DepositAsset(props) {
     functionName: "deposit",
     params: {
       _tokenAddress: erc20TokenAddress[chainId][depositAsset],
-      _baseAddress: chainlinkPriceFeeds[chainId]?.eth?.usd,
+      _baseAddress: chainlinkPriceFeeds[chainId]?.native?.usd,
       _quoteAddress: chainlinkPriceFeeds[chainId][depositAsset]?.usd,
     },
   });
@@ -99,7 +99,7 @@ export default function DepositAsset(props) {
   );
 
   useEffect(() => {
-    if (depositAsset !== "eth") {
+    if (depositAsset !== "native") {
       runGetPriceConverter();
     }
     // eslint-disable-next-line
@@ -125,16 +125,20 @@ export default function DepositAsset(props) {
       {isCreator && (
         <Select
           style={{ minWidth: "200px" }}
-          value={depositAsset === "eth" ? "" : depositAsset}
+          value={depositAsset === "native" ? "" : depositAsset}
           onChange={handleSelect}
           disabled={isApproved}
         >
-          <Select.Option value="uni">Uniswap (UNI)</Select.Option>
-          <Select.Option value="link">Chainlink (LINK)</Select.Option>
+          {chainId === "0x2a" && (
+            <Select.Option value="uni">Uniswap (UNI)</Select.Option>
+          )}
+          {chainId !== "0x13881" && (
+            <Select.Option value="link">Chainlink (LINK)</Select.Option>
+          )}
           <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
         </Select>
       )}
-      {depositAsset !== "eth" && (
+      {depositAsset !== "native" && (
         <Typography.Text style={{ fontSize: "16px" }}>
           You will deposit approximately{" "}
           <b>
@@ -143,7 +147,8 @@ export default function DepositAsset(props) {
               sides *
               0.01
             ).toFixed(3)}{" "}
-            {depositAsset?.toUpperCase()} ({sides * 0.01} ETH)
+            {depositAsset?.toUpperCase()} ({sides * 0.01}{" "}
+            {networkConfigs[chainId]?.currencySymbol})
           </b>
         </Typography.Text>
       )}

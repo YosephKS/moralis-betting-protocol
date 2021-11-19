@@ -285,7 +285,9 @@ exports.handler = async function (event) {
       "0xa36085F69e2889c224210F603D836748e7dC0088",
       { from }
     );
-    await erc20.methods.transfer(transferAddress, (1e18).toString()).send();
+    await erc20.methods
+      .transfer(transferAddress, (0.2 * 1e18).toString())
+      .send();
   } catch (e) {
     console.error(e);
   }
