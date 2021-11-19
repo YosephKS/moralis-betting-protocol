@@ -13,7 +13,7 @@ export default function Faucet() {
   const { walletAddress, chainId } = useMoralisDapp();
   const { runContractFunction, isRunning, isLoading } = useWeb3Contract({
     abi,
-    contractAddress: deployedContracts[chainId].erc20Basic,
+    contractAddress: deployedContracts[chainId]?.erc20Basic,
     functionName: "mint",
     params: {
       to: walletAddress,
