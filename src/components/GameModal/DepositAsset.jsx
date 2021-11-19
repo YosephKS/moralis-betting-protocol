@@ -39,11 +39,13 @@ export default function DepositAsset(props) {
     contractAddress: deployedContracts[chainId].priceConverter,
     functionName: "getDerivedPrice",
     params: {
-      _base: chainlinkPriceFeeds[chainId]["eth"]["usd"],
-      _quote: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
+      _base: chainlinkPriceFeeds[chainId]?.eth?.usd,
+      _quote: chainlinkPriceFeeds[chainId][depositAsset]?.usd,
       _decimals: 18,
     },
   });
+
+  console.log(depositAsset);
 
   /**
    * @description Approve ERC20 token before depositing into smart contract
@@ -57,7 +59,7 @@ export default function DepositAsset(props) {
     contractAddress: erc20TokenAddress[chainId][depositAsset],
     functionName: "approve",
     params: {
-      spender: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
+      spender: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
       amount: depositAmount ?? 0,
     },
   });
@@ -71,12 +73,12 @@ export default function DepositAsset(props) {
     isRunning: isDepositRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
+    contractAddress: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
     functionName: "deposit",
     params: {
       _tokenAddress: erc20TokenAddress[chainId][depositAsset],
-      _baseAddress: chainlinkPriceFeeds[chainId]["eth"]["usd"],
-      _quoteAddress: chainlinkPriceFeeds[chainId][depositAsset]["usd"],
+      _baseAddress: chainlinkPriceFeeds[chainId]?.eth?.usd,
+      _quoteAddress: chainlinkPriceFeeds[chainId][depositAsset]?.usd,
     },
   });
 
@@ -114,7 +116,8 @@ export default function DepositAsset(props) {
       </Typography.Text>
       {!isCreator && (
         <Typography.Text>
-          Prepare some <b>UNI</b> before depositing it.
+          Prepare some <b>{depositAsset?.toUpperCase()}</b> before depositing
+          it.
         </Typography.Text>
       )}
       {isCreator && (
@@ -138,7 +141,7 @@ export default function DepositAsset(props) {
               sides *
               0.01
             ).toFixed(3)}{" "}
-            {depositAsset.toUpperCase()} ({sides * 0.01} ETH)
+            {depositAsset?.toUpperCase()} ({sides * 0.01} ETH)
           </b>
         </Typography.Text>
       )}

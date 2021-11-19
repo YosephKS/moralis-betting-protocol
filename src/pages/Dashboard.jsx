@@ -20,10 +20,14 @@ const styles = {
 
 export default function Dashboard() {
   const [visible, setVisible] = useState(false);
+  const [initialModalValues, setInitialModalValues] = useState({});
   const { walletAddress } = useMoralisDapp();
   const { data, fetch } = useMoralisQuery(
     "BettingGameCreatedKovan",
-    (query) => query.notEqualTo("creator", walletAddress ?? ""),
+    (query) =>
+      query
+        .notEqualTo("creator", walletAddress ?? "")
+        .descending("bettingGameId"),
     [],
     {
       live: true,
@@ -46,7 +50,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <GameModal visible={visible} handleClose={() => setVisible()} />
+      <GameModal
+        visible={visible}
+        handleClose={() => setVisible(false)}
+        initialValues={initialModalValues}
+      />
       <div style={styles.wrapper}>
         <div style={styles.title}>
           <Typography.Title level={1}>
@@ -61,7 +69,13 @@ export default function Dashboard() {
             bettingGameData.map((address) => {
               return (
                 <Col span={8}>
-                  <GameCard cardTitle={address} />
+                  <GameCard
+                    cardTitle={address}
+                    handleChallenge={(data) => {
+                      setInitialModalValues(data);
+                      setVisible(true);
+                    }}
+                  />
                 </Col>
               );
             })

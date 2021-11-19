@@ -1,10 +1,12 @@
 import React, { useMemo, useEffect } from "react";
 import { Card, Typography, Button, Space, Skeleton } from "antd";
+import moment from "moment";
 import { getEllipsisTxt } from "helpers/formatters";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import BettingGameABI from "../../contracts/BettingGame.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { networkConfigs } from "helpers/networks";
+import erc20TokenAddress from "../../list/erc20TokenAddress.json";
 
 export default function CardIndex(props) {
   const { cardTitle, handleChallenge } = props;
@@ -81,7 +83,9 @@ export default function CardIndex(props) {
   useEffect(() => {
     runGetBettingGameInfo();
     // eslint-disable-next-line
-  }, []);
+  }, [cardTitle]);
+
+  console.log(contractResponse);
 
   return (
     <Card title={getEllipsisTxt(cardTitle, 15)} bordered hoverable>
@@ -150,7 +154,11 @@ export default function CardIndex(props) {
               >
                 Expiry Time
               </Typography.Text>
-              <Typography.Text>{contractResponse[4]}</Typography.Text>
+              <Typography.Text>
+                {moment
+                  .unix(parseInt(contractResponse[4]))
+                  .format("MMM DD, YYYY HH:mm")}
+              </Typography.Text>
               {contractResponse[5] !==
                 "0x0000000000000000000000000000000000000000" && (
                 <>
@@ -166,7 +174,13 @@ export default function CardIndex(props) {
                       rel="noreferrer"
                       href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[5]}`}
                     >
-                      {contractResponse[5]}
+                      {Object.keys(erc20TokenAddress[chainId])
+                        .find(
+                          (erc20) =>
+                            erc20TokenAddress[chainId][erc20] ===
+                            contractResponse[5].toLowerCase()
+                        )
+                        .toUpperCase()}
                     </a>
                   </Typography.Text>
                 </>
@@ -211,14 +225,22 @@ export default function CardIndex(props) {
                   disabled={isCreator}
                   type="primary"
                   style={{ width: "100%" }}
-                  onClick={() => handleChallenge()}
+                  onClick={() =>
+                    handleChallenge({
+                      sides: contractResponse[2],
+                      status: contractResponse[3],
+                      expiryTime: contractResponse[4],
+                      depositTokenAddress: contractResponse[5],
+                      bettingGameAddress: cardTitle,
+                    })
+                  }
                 >
                   {isCreator ? "WAIT FOR CHALLENGER" : "BET"}
                 </Button>
               ) : (
                 <Button
                   size="large"
-                  disabled={isWinner}
+                  disabled={!isWinner}
                   type="primary"
                   style={{ width: "100%" }}
                   onClick={() => runWithdraw()}

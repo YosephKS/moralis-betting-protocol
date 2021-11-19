@@ -36,7 +36,9 @@ export default function BurnToken(props) {
     contractAddress: deployedContracts[chainId].erc20Basic,
     functionName: "approve",
     params: {
-      spender: deployedContracts[chainId].bettingGameRegistry,
+      spender: isCreator
+        ? deployedContracts[chainId].bettingGameRegistry
+        : bettingGameAddress,
       amount: Moralis.Units.Token(0.01 * sides, 18),
     },
   });
@@ -45,6 +47,7 @@ export default function BurnToken(props) {
    * @description Create a new Betting Game as a Creator
    */
   const {
+    // contractResponse,
     runContractFunction: runCreateGame,
     isLoading: isCreateGameLoading,
     isRunning: isCreateGameRunning,
@@ -127,7 +130,7 @@ export default function BurnToken(props) {
             }
           } else {
             runApprove({
-              onSuccess: (result) => {
+              onSuccess: () => {
                 setIsApproved(true);
               },
             });

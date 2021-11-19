@@ -15,7 +15,7 @@ export default function PlayGame(props) {
     isRunning: isPlayingRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
+    contractAddress: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
     functionName: "play",
     params: {},
   });
@@ -26,7 +26,7 @@ export default function PlayGame(props) {
     isRunning: isGetBettingResultRunning,
   } = useWeb3Contract({
     abi: bettingGameABI,
-    contractAddress: "0x145a328AE0a6eaA365C13E754E329E3DA9EEcF3E",
+    contractAddress: "0x8de65d9db4dc5b1ed43591d7d46e30c276848c28",
     functionName: "getPlayerBettingResult",
     params: {},
   });
@@ -75,7 +75,9 @@ export default function PlayGame(props) {
         </>
       ) : (
         <>
-          <Typography.Text></Typography.Text>
+          <Typography.Text>
+            {isCreator ? "Now wait for a Challenger to bet against you!" : ""}
+          </Typography.Text>
           <Button
             type="primary"
             disabled={disableButton}

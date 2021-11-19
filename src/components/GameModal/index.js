@@ -4,9 +4,19 @@ import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 import BurnToken from "./BurnToken";
 import DepositAsset from "./DepositAsset";
 import PlayGame from "./PlayGame";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import erc20TokenAddress from "../../list/erc20TokenAddress";
 
 export default function GameModal(props) {
-  const { visible, handleClose, isCreator } = props;
+  const { visible, handleClose, isCreator, initialValues } = props;
+  const {
+    sides: initialSides,
+    depositTokenAddress: initialDepositAsset,
+    bettingGameAddress: initialBettingGameAddress,
+    // expiryTime,
+    // status
+  } = initialValues || {};
+  const { chainId } = useMoralisDapp();
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
@@ -27,6 +37,35 @@ export default function GameModal(props) {
     }
     // eslint-disable-next-line
   }, [depositAsset]);
+
+  useEffect(() => {
+    if (initialSides) {
+      setSides(initialSides);
+    }
+    // eslint-disable-next-line
+  }, [initialSides]);
+
+  useEffect(() => {
+    if (
+      initialDepositAsset &&
+      initialDepositAsset !== "0x0000000000000000000000000000000000000000"
+    ) {
+      const getDepositAsset = Object.keys(erc20TokenAddress[chainId]).find(
+        (erc20) =>
+          erc20TokenAddress[chainId][erc20] ===
+          initialDepositAsset.toLowerCase()
+      );
+      setDepositAsset(getDepositAsset);
+    }
+    // eslint-disable-next-line
+  }, [initialDepositAsset]);
+
+  useEffect(() => {
+    if (initialBettingGameAddress) {
+      setBettingGameAddress(initialBettingGameAddress);
+    }
+    // eslint-disable-next-line
+  }, [bettingGameAddress]);
 
   return (
     <Modal
@@ -71,6 +110,7 @@ export default function GameModal(props) {
             handleInputNumberChange={(value) => setSides(value)}
             handleBettingGameAddress={(res) => setBettingGameAddress(res)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
+            bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
           />
         )}
         {currentIndex === 1 && (
@@ -81,14 +121,14 @@ export default function GameModal(props) {
             isCreator={isCreator}
             handleSelect={(value) => setDepositAsset(value)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
-            bettingGameAddress={bettingGameAddress}
+            bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
           />
         )}
         {currentIndex === 2 && (
           <PlayGame
             isCreator={isCreator}
             onCompleted={handleClose}
-            bettingGameAddress={bettingGameAddress}
+            bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
           />
         )}
       </div>
