@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, InputNumber, Button } from "antd";
-import { useMoralis } from "react-moralis";
+import { useMoralis, useMoralisQuery } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
+import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import ERC20BasicABI from "../../contracts/ERC20Basic.json";
 import BettingGameRegistryABI from "../../contracts/BettingGameRegistry.json";
 import BettingGameABI from "../../contracts/BettingGame.json";
 import deployedContracts from "../../list/deployedContracts.json";
-import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import database from "../../list/database.json";
 
 export default function BurnToken(props) {
   const {
@@ -23,6 +24,23 @@ export default function BurnToken(props) {
   const { abi: bettingGameABI } = BettingGameABI;
   const { Moralis } = useMoralis();
   const [isApproved, setIsApproved] = useState(false);
+  const [transactionHash, setTransactionHash] = useState();
+
+  /**
+   * @description Fetch `BettingGameCreated` event data from DB
+   */
+  const {
+    data: bettingGameData,
+    isFetching: isBettingGameFetching,
+    isLoading: isBettingGameLoading,
+  } = useMoralisQuery(
+    database[chainId]?.bettingGameCreated,
+    (query) => query.equalTo("transaction_hash", transactionHash),
+    [transactionHash],
+    {
+      live: true,
+    }
+  );
 
   /**
    * @description Approve ERC20 token before burning it
@@ -47,7 +65,6 @@ export default function BurnToken(props) {
    * @description Create a new Betting Game as a Creator
    */
   const {
-    // contractResponse,
     runContractFunction: runCreateGame,
     isLoading: isCreateGameLoading,
     isRunning: isCreateGameRunning,
@@ -81,7 +98,9 @@ export default function BurnToken(props) {
       isCreateGameLoading ||
       isCreateGameRunning ||
       isChallengeLoading ||
-      isChallengeRunning,
+      isChallengeRunning ||
+      isBettingGameFetching ||
+      isBettingGameLoading,
     [
       isApproveLoading,
       isApproveRunning,
@@ -89,8 +108,24 @@ export default function BurnToken(props) {
       isCreateGameRunning,
       isChallengeLoading,
       isChallengeRunning,
+      isBettingGameFetching,
+      isBettingGameLoading,
     ]
   );
+
+  useEffect(() => {
+    if (
+      bettingGameData &&
+      bettingGameData?.length === 1 &&
+      bettingGameAddress === ""
+    ) {
+      const { attributes } = bettingGameData[0];
+      const { bettingGameAddress: res } = attributes;
+      handleBettingGameAddress(res);
+      handleNext();
+    }
+    // eslint-disable-next-line
+  }, [bettingGameData, bettingGameAddress]);
 
   return (
     <Space direction="vertical" size="middle" style={{ fontSize: "16px" }}>
@@ -119,7 +154,7 @@ export default function BurnToken(props) {
               runCreateGame({
                 onSuccess: (result) => {
                   const { transactionHash } = result;
-                  handleBettingGameAddress(transactionHash);
+                  setTransactionHash(transactionHash);
                 },
               });
             } else {

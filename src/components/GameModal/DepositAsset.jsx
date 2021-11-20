@@ -138,15 +138,11 @@ export default function DepositAsset(props) {
           <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
         </Select>
       )}
-      {depositAsset !== "native" && (
+      {depositAsset !== "native" && nativeTokenPrice && (
         <Typography.Text style={{ fontSize: "16px" }}>
           You will deposit approximately{" "}
           <b>
-            {(
-              (nativeTokenPrice ? 1 / nativeTokenPrice : 0) *
-              sides *
-              0.01
-            ).toFixed(3)}{" "}
+            {((1 / nativeTokenPrice) * sides * 0.01).toFixed(3)}{" "}
             {depositAsset?.toUpperCase()} ({sides * 0.01}{" "}
             {networkConfigs[chainId]?.currencySymbol})
           </b>
