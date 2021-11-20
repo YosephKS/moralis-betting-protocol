@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, Select, Button } from "antd";
+import { useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20ABI from "../../contracts/ERC20.json";
 import PriceConverterABI from "../../contracts/PriceConverter.json";
@@ -20,11 +21,23 @@ export default function DepositAsset(props) {
     bettingGameAddress,
     isCreator,
   } = props;
-  const { chainId } = useMoralisDapp();
+  const { chainId, walletAddress } = useMoralisDapp();
+  const Web3Api = useMoralisWeb3Api();
   const { abi: erc20ABI } = ERC20ABI;
   const { abi: priceConverterABI } = PriceConverterABI;
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
+
+  const {
+    fetch: runGetTokenAllowance,
+    isLoading: isGettingTokenAllowanceLoading,
+    isFetching: isGettingTokenAllowanceFetching,
+  } = useMoralisWeb3ApiCall(Web3Api.token.getTokenAllowance, {
+    chain: chainId,
+    owner_address: walletAddress,
+    spender_address: bettingGameAddress,
+    address: erc20TokenAddress[chainId][depositAsset],
+  });
 
   /**
    * @description Get pricing for ETH/BSC/MATIC to UNI/LINK/DAI
@@ -87,7 +100,9 @@ export default function DepositAsset(props) {
       isApproveRunning ||
       isApproveLoading ||
       isDepositLoading ||
-      isDepositRunning,
+      isDepositRunning ||
+      isGettingTokenAllowanceLoading ||
+      isGettingTokenAllowanceFetching,
     [
       isPriceConverterLoading,
       isPriceConverterRunning,
@@ -95,6 +110,8 @@ export default function DepositAsset(props) {
       isApproveRunning,
       isDepositLoading,
       isDepositRunning,
+      isGettingTokenAllowanceLoading,
+      isGettingTokenAllowanceFetching,
     ]
   );
 
@@ -138,7 +155,7 @@ export default function DepositAsset(props) {
           <Select.Option value="dai">Dai Stablecoin (DAI)</Select.Option>
         </Select>
       )}
-      {depositAsset !== "native" && nativeTokenPrice && (
+      {depositAsset !== "native" && nativeTokenPrice ? (
         <Typography.Text style={{ fontSize: "16px" }}>
           You will deposit approximately{" "}
           <b>
@@ -147,6 +164,8 @@ export default function DepositAsset(props) {
             {networkConfigs[chainId]?.currencySymbol})
           </b>
         </Typography.Text>
+      ) : (
+        <></>
       )}
       <Button
         type="primary"
@@ -157,7 +176,16 @@ export default function DepositAsset(props) {
             runDeposit({ onSuccess: () => handleNext() });
           } else {
             runApprove({
-              onSuccess: () => setIsApproved(true),
+              onSuccess: () => {
+                runGetTokenAllowance({
+                  onSuccess: (result) => {
+                    const { allowance } = result || {};
+                    if (parseInt(allowance) === parseInt(depositAmount)) {
+                      setIsApproved(true);
+                    }
+                  },
+                });
+              },
             });
           }
         }}

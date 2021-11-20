@@ -58,9 +58,9 @@ export default function Dashboard() {
         </div>
         <Row gutter={16} style={{ marginTop: "2rem" }}>
           {bettingGameData && bettingGameData.length > 0 ? (
-            bettingGameData.map((address) => {
+            bettingGameData.map((address, key) => {
               return (
-                <Col span={8}>
+                <Col span={8} key={key}>
                   <GameCard
                     cardTitle={address}
                     handleChallenge={(data) => {

@@ -53,9 +53,9 @@ export default function Bets() {
         </div>
         {bettingGameData && bettingGameData?.length > 0 ? (
           <Row gutter={16}>
-            {bettingGameData.map((address) => {
+            {bettingGameData.map((address, key) => {
               return (
-                <Col span={8}>
+                <Col span={8} key={key}>
                   <GameCard cardTitle={address} />
                 </Col>
               );

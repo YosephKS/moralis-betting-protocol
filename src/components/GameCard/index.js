@@ -7,6 +7,7 @@ import BettingGameABI from "../../contracts/BettingGame.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { networkConfigs } from "helpers/networks";
 import erc20TokenAddress from "../../list/erc20TokenAddress.json";
+import isZeroAddress from "helpers/validators";
 
 export default function CardIndex(props) {
   const { cardTitle, handleChallenge } = props;
@@ -47,42 +48,50 @@ export default function CardIndex(props) {
     [isGetBettingGameLoading, isGetBettingGameRunning]
   );
 
-  const isCreator = useMemo(() => {
-    if (contractResponse && Object.keys(contractResponse).length === 10) {
-      return contractResponse[0].toLowerCase() === walletAddress;
-    }
-
-    return false;
-  }, [contractResponse, walletAddress]);
-
-  const isChallenger = useMemo(() => {
-    if (contractResponse && Object.keys(contractResponse).length === 10) {
-      return contractResponse[1].toLowerCase() === walletAddress;
-    }
-
-    return false;
-  }, [contractResponse, walletAddress]);
-
-  const isWinner = useMemo(() => {
-    if (contractResponse && Object.keys(contractResponse).length === 10) {
-      return contractResponse[6].toLowerCase() === walletAddress;
-    }
-
-    return false;
-  }, [contractResponse, walletAddress]);
-
-  const isWithdrawn = useMemo(
-    () =>
-      contractResponse &&
-      Object.keys(contractResponse).length === 10 &&
-      contractResponse[7],
+  const isContractResponseValid = useMemo(
+    () => contractResponse && Object.keys(contractResponse).length === 10,
     [contractResponse]
   );
 
+  const isCreator = useMemo(
+    () =>
+      isContractResponseValid &&
+      contractResponse[0].toLowerCase() === walletAddress,
+    [isContractResponseValid, contractResponse, walletAddress]
+  );
+
+  const isChallenger = useMemo(
+    () =>
+      isContractResponseValid &&
+      contractResponse[1].toLowerCase() === walletAddress,
+    [isContractResponseValid, contractResponse, walletAddress]
+  );
+
+  const isWinner = useMemo(
+    () =>
+      isContractResponseValid &&
+      contractResponse[6].toLowerCase() === walletAddress,
+    [isContractResponseValid, contractResponse, walletAddress]
+  );
+
+  const isWithdrawn = useMemo(
+    () => isContractResponseValid && contractResponse[7],
+    [isContractResponseValid, contractResponse]
+  );
+
+  const isExpired = useMemo(
+    () =>
+      isContractResponseValid &&
+      moment().isAfter(moment.unix(parseInt(contractResponse[4]))),
+    [isContractResponseValid, contractResponse]
+  );
+
   useEffect(() => {
-    runGetBettingGameInfo();
+    if (cardTitle) {
+      runGetBettingGameInfo();
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [cardTitle]);
 
   return (
     <Card
@@ -111,7 +120,7 @@ export default function CardIndex(props) {
                   rel="noreferrer"
                   href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[0]}`}
                 >
-                  {isCreator ? "You" : contractResponse[0]}
+                  {isCreator ? "You" : getEllipsisTxt(contractResponse[0])}
                 </a>
               </Typography.Text>
 
@@ -122,14 +131,13 @@ export default function CardIndex(props) {
                 Challenger:
               </Typography.Text>
               <Typography.Text>
-                {contractResponse[1] !==
-                "0x0000000000000000000000000000000000000000" ? (
+                {!isZeroAddress(contractResponse[1]) ? (
                   <a
                     target="_blank"
                     rel="noreferrer"
                     href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[1]}`}
                   >
-                    {isChallenger ? "You" : contractResponse[1]}
+                    {isChallenger ? "You" : getEllipsisTxt(contractResponse[1])}
                   </a>
                 ) : (
                   "-"
@@ -169,8 +177,7 @@ export default function CardIndex(props) {
                 Deposit Asset
               </Typography.Text>
               <Typography.Text>
-                {contractResponse[5] !==
-                "0x0000000000000000000000000000000000000000" ? (
+                {!isZeroAddress(contractResponse[5]) ? (
                   <a
                     target="_blank"
                     rel="noreferrer"
@@ -195,14 +202,13 @@ export default function CardIndex(props) {
                 Winner
               </Typography.Text>
               <Typography.Text>
-                {contractResponse[6] !==
-                "0x0000000000000000000000000000000000000000" ? (
+                {!isZeroAddress(contractResponse[6]) ? (
                   <a
                     target="_blank"
                     rel="noreferrer"
                     href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[6]}`}
                   >
-                    {isWinner ? "You" : contractResponse[6]}
+                    {isWinner ? "You" : getEllipsisTxt(contractResponse[6])}
                   </a>
                 ) : (
                   "-"
@@ -243,7 +249,7 @@ export default function CardIndex(props) {
               {contractResponse[3] === "0" ? (
                 <Button
                   size="large"
-                  disabled={isCreator}
+                  disabled={isCreator || isExpired}
                   type="primary"
                   style={{ width: "100%" }}
                   onClick={() =>
@@ -256,7 +262,11 @@ export default function CardIndex(props) {
                     })
                   }
                 >
-                  {isCreator ? "WAIT FOR CHALLENGER" : "BET"}
+                  {isExpired
+                    ? "EXPIRED"
+                    : isCreator
+                    ? "WAIT FOR CHALLENGER"
+                    : "BET"}
                 </Button>
               ) : (
                 <Button

@@ -1,6 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, InputNumber, Button } from "antd";
-import { useMoralis, useMoralisQuery } from "react-moralis";
+import {
+  useMoralis,
+  useMoralisQuery,
+  useMoralisWeb3Api,
+  useMoralisWeb3ApiCall,
+} from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import ERC20BasicABI from "../../contracts/ERC20Basic.json";
@@ -18,13 +23,25 @@ export default function BurnToken(props) {
     handleNext,
     isCreator,
   } = props;
-  const { chainId } = useMoralisDapp();
+  const { chainId, walletAddress } = useMoralisDapp();
+  const { Moralis } = useMoralis();
+  const Web3Api = useMoralisWeb3Api();
   const { abi: erc20BasicABI } = ERC20BasicABI;
   const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
   const { abi: bettingGameABI } = BettingGameABI;
-  const { Moralis } = useMoralis();
   const [isApproved, setIsApproved] = useState(false);
   const [transactionHash, setTransactionHash] = useState();
+
+  const {
+    fetch: runGetTokenAllowance,
+    isLoading: isGettingTokenAllowanceLoading,
+    isFetching: isGettingTokenAllowanceFetching,
+  } = useMoralisWeb3ApiCall(Web3Api.token.getTokenAllowance, {
+    chain: chainId,
+    owner_address: walletAddress,
+    spender_address: deployedContracts[chainId].bettingGameRegistry,
+    address: deployedContracts[chainId].erc20Basic,
+  });
 
   /**
    * @description Fetch `BettingGameCreated` event data from DB
@@ -100,7 +117,9 @@ export default function BurnToken(props) {
       isChallengeLoading ||
       isChallengeRunning ||
       isBettingGameFetching ||
-      isBettingGameLoading,
+      isBettingGameLoading ||
+      isGettingTokenAllowanceFetching ||
+      isGettingTokenAllowanceLoading,
     [
       isApproveLoading,
       isApproveRunning,
@@ -110,6 +129,8 @@ export default function BurnToken(props) {
       isChallengeRunning,
       isBettingGameFetching,
       isBettingGameLoading,
+      isGettingTokenAllowanceFetching,
+      isGettingTokenAllowanceLoading,
     ]
   );
 
@@ -164,9 +185,18 @@ export default function BurnToken(props) {
             }
           } else {
             runApprove({
-              onSuccess: () => {
-                setIsApproved(true);
-              },
+              onSuccess: () =>
+                runGetTokenAllowance({
+                  onSuccess: (result) => {
+                    const { allowance } = result || {};
+                    if (
+                      parseInt(allowance) ===
+                      parseInt(Moralis.Units.Token(0.01 * sides, 18))
+                    ) {
+                      setIsApproved(true);
+                    }
+                  },
+                }),
             });
           }
         }}

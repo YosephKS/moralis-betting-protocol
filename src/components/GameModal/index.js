@@ -7,6 +7,7 @@ import PlayGame from "./PlayGame";
 import ShowResult from "./ShowResult";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import erc20TokenAddress from "../../list/erc20TokenAddress";
+import isZeroAddress from "helpers/validators";
 
 export default function GameModal(props) {
   const { visible, handleClose, isCreator, initialValues } = props;
@@ -14,8 +15,6 @@ export default function GameModal(props) {
     sides: initialSides,
     depositTokenAddress: initialDepositAsset,
     bettingGameAddress: initialBettingGameAddress,
-    // expiryTime,
-    // status
   } = initialValues || {};
   const { chainId } = useMoralisDapp();
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
@@ -61,10 +60,7 @@ export default function GameModal(props) {
   }, [initialSides]);
 
   useEffect(() => {
-    if (
-      initialDepositAsset &&
-      initialDepositAsset !== "0x0000000000000000000000000000000000000000"
-    ) {
+    if (initialDepositAsset && !isZeroAddress(initialDepositAsset)) {
       const getDepositAsset = Object.keys(erc20TokenAddress[chainId]).find(
         (erc20) =>
           erc20TokenAddress[chainId][erc20].toLowerCase() ===
