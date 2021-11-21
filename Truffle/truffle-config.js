@@ -4,6 +4,7 @@ const mnemonic = fs.readFileSync(".secret").toString().trim();
 require("dotenv").config();
 
 module.exports = {
+  contracts_build_directory: "../src/contracts",
   plugins: ["truffle-plugin-verify"],
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY,
