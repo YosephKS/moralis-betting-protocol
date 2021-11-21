@@ -1,11 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, InputNumber, Button } from "antd";
-import {
-  useMoralis,
-  useMoralisQuery,
-  useMoralisWeb3Api,
-  useMoralisWeb3ApiCall,
-} from "react-moralis";
+import { useMoralis, useMoralisQuery } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import ERC20BasicABI from "../../contracts/ERC20Basic.json";
@@ -23,31 +18,14 @@ export default function BurnToken(props) {
     handleNext,
     isCreator,
   } = props;
-  const { chainId, walletAddress } = useMoralisDapp();
+  const { chainId } = useMoralisDapp();
   const { Moralis } = useMoralis();
-  const Web3Api = useMoralisWeb3Api();
   const { abi: erc20BasicABI } = ERC20BasicABI;
   const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
   const [isBurnt, setIsBurnt] = useState(false);
   const [transactionHash, setTransactionHash] = useState();
-
-  /**
-   * @description Get token allowance to verify existing token allowance before burning token
-   */
-  const {
-    fetch: runGetTokenAllowance,
-    isLoading: isGettingTokenAllowanceLoading,
-    isFetching: isGettingTokenAllowanceFetching,
-  } = useMoralisWeb3ApiCall(Web3Api.token.getTokenAllowance, {
-    chain: chainId,
-    owner_address: walletAddress,
-    spender_address: isCreator
-      ? deployedContracts[chainId].bettingGameRegistry
-      : bettingGameAddress,
-    address: deployedContracts[chainId].erc20Basic,
-  });
 
   /**
    * @description Fetch `BettingGameCreated` event data from DB
@@ -120,9 +98,7 @@ export default function BurnToken(props) {
       isChallengeLoading ||
       isChallengeRunning ||
       isBettingGameFetching ||
-      isBettingGameLoading ||
-      isGettingTokenAllowanceFetching ||
-      isGettingTokenAllowanceLoading,
+      isBettingGameLoading,
     [
       isApproveLoading,
       isApproveRunning,
@@ -132,8 +108,6 @@ export default function BurnToken(props) {
       isChallengeRunning,
       isBettingGameFetching,
       isBettingGameLoading,
-      isGettingTokenAllowanceFetching,
-      isGettingTokenAllowanceLoading,
     ]
   );
 
@@ -183,31 +157,19 @@ export default function BurnToken(props) {
         disabled={disableButton}
         onClick={() => {
           if (isApproved) {
-            runGetTokenAllowance({
-              onSuccess: (result) => {
-                const { allowance } = result || {};
-                if (
-                  parseInt(allowance) ===
-                  parseInt(Moralis.Units.Token(0.01 * sides, 18))
-                ) {
-                  if (isCreator) {
-                    runCreateGame({
-                      onSuccess: (result) => {
-                        const { transactionHash } = result;
-                        setTransactionHash(transactionHash);
-                        setIsBurnt(true);
-                      },
-                    });
-                  } else {
-                    runChallenge({
-                      onSuccess: () => setIsBurnt(true),
-                    });
-                  }
-                } else {
-                  alert("Wait for a moment for the ERC20 Approval!");
-                }
-              },
-            });
+            if (isCreator) {
+              runCreateGame({
+                onSuccess: (result) => {
+                  const { transactionHash } = result;
+                  setTransactionHash(transactionHash);
+                  setIsBurnt(true);
+                },
+              });
+            } else {
+              runChallenge({
+                onSuccess: () => setIsBurnt(true),
+              });
+            }
           } else {
             runApprove({
               onSuccess: () => setIsApproved(true),

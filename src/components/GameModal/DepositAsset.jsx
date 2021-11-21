@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, Select, Button } from "antd";
-import { useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
 import ERC20ABI from "contracts/ERC20.json";
 import PriceConverterABI from "contracts/PriceConverter.json";
@@ -21,8 +20,7 @@ export default function DepositAsset(props) {
     bettingGameAddress,
     isCreator,
   } = props;
-  const { chainId, walletAddress } = useMoralisDapp();
-  const Web3Api = useMoralisWeb3Api();
+  const { chainId } = useMoralisDapp();
   const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const { abi: erc20ABI } = ERC20ABI;
   const { abi: priceConverterABI } = PriceConverterABI;
@@ -30,20 +28,6 @@ export default function DepositAsset(props) {
   const [isApproved, setIsApproved] = useState(false);
   const [isDeposited, setIsDeposited] = useState(false);
   const [depositAsset, setDepositAsset] = useState("native");
-
-  /**
-   * @description Get token allowance to verify existing allowance before depositing
-   */
-  const {
-    fetch: runGetTokenAllowance,
-    isLoading: isGettingTokenAllowanceLoading,
-    isFetching: isGettingTokenAllowanceFetching,
-  } = useMoralisWeb3ApiCall(Web3Api.token.getTokenAllowance, {
-    chain: chainId,
-    owner_address: walletAddress,
-    spender_address: bettingGameAddress,
-    address: erc20TokenAddress[chainId][depositAsset],
-  });
 
   /**
    * @description Get pricing for ETH/BSC/MATIC to UNI/LINK/DAI
@@ -106,9 +90,7 @@ export default function DepositAsset(props) {
       isApproveRunning ||
       isApproveLoading ||
       isDepositLoading ||
-      isDepositRunning ||
-      isGettingTokenAllowanceLoading ||
-      isGettingTokenAllowanceFetching,
+      isDepositRunning,
     [
       isPriceConverterLoading,
       isPriceConverterRunning,
@@ -116,8 +98,6 @@ export default function DepositAsset(props) {
       isApproveRunning,
       isDepositLoading,
       isDepositRunning,
-      isGettingTokenAllowanceLoading,
-      isGettingTokenAllowanceFetching,
     ]
   );
 
@@ -222,17 +202,8 @@ export default function DepositAsset(props) {
         disabled={disableButton}
         onClick={() => {
           if (isApproved) {
-            runGetTokenAllowance({
-              onSuccess: (result) => {
-                const { allowance } = result || {};
-                if (parseInt(allowance) === parseInt(depositAmount)) {
-                  runDeposit({
-                    onSuccess: () => setIsDeposited(true),
-                  });
-                } else {
-                  alert("Wait for a moment for the ERC20 Approval!");
-                }
-              },
+            runDeposit({
+              onSuccess: () => setIsDeposited(true),
             });
           } else {
             runApprove({
