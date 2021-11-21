@@ -2,20 +2,20 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Space, Typography, Select, Button } from "antd";
 import { useMoralisWeb3Api, useMoralisWeb3ApiCall } from "react-moralis";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
-import ERC20ABI from "../../contracts/ERC20.json";
-import PriceConverterABI from "../../contracts/PriceConverter.json";
-import BettingGameABI from "../../contracts/BettingGame.json";
-import deployedContracts from "../../list/deployedContracts.json";
-import chainlinkPriceFeeds from "../../list/chainlinkPriceFeeds.json";
-import erc20TokenAddress from "../../list/erc20TokenAddress.json";
+import ERC20ABI from "contracts/ERC20.json";
+import PriceConverterABI from "contracts/PriceConverter.json";
+import BettingGameABI from "contracts/BettingGame.json";
+import deployedContracts from "list/deployedContracts.json";
+import chainlinkPriceFeeds from "list/chainlinkPriceFeeds.json";
+import erc20TokenAddress from "list/erc20TokenAddress.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { networkConfigs } from "helpers/networks";
+import isZeroAddress from "helpers/validators";
+import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 
 export default function DepositAsset(props) {
   const {
-    depositAsset,
-    handleSelect,
-    nativeTokenPrice,
+    initialDepositAsset,
     sides,
     handleNext,
     bettingGameAddress,
@@ -23,11 +23,17 @@ export default function DepositAsset(props) {
   } = props;
   const { chainId, walletAddress } = useMoralisDapp();
   const Web3Api = useMoralisWeb3Api();
+  const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const { abi: erc20ABI } = ERC20ABI;
   const { abi: priceConverterABI } = PriceConverterABI;
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
+  const [isDeposited, setIsDeposited] = useState(false);
+  const [depositAsset, setDepositAsset] = useState("native");
 
+  /**
+   * @description Get token allowance to verify existing allowance before depositing
+   */
   const {
     fetch: runGetTokenAllowance,
     isLoading: isGettingTokenAllowanceLoading,
@@ -117,10 +123,53 @@ export default function DepositAsset(props) {
 
   useEffect(() => {
     if (depositAsset !== "native") {
+      const options = () => {
+        switch (chainId) {
+          case "0x61":
+            return {
+              exchange: "pancakeswap-v2",
+              address: erc20TokenAddress["0x38"][depositAsset],
+            };
+          case "0x13881":
+            return {
+              exchange: "quickswap",
+              address: erc20TokenAddress["0x89"][depositAsset],
+            };
+          case "0x2a":
+          default:
+            return {
+              exchange: "uniswap-v3",
+              address: erc20TokenAddress["0x1"][depositAsset],
+            };
+        }
+      };
+
+      // Fetch for Web3 API
+      fetchNativeTokenPrice(options());
+      // Fetch from Chainlink Price Feeds
       runGetPriceConverter();
     }
     // eslint-disable-next-line
   }, [depositAsset]);
+
+  useEffect(() => {
+    if (initialDepositAsset && !isZeroAddress(initialDepositAsset)) {
+      const getDepositAsset = Object.keys(erc20TokenAddress[chainId]).find(
+        (erc20) =>
+          erc20TokenAddress[chainId][erc20].toLowerCase() ===
+          initialDepositAsset.toLowerCase()
+      );
+      setDepositAsset(getDepositAsset);
+    }
+    // eslint-disable-next-line
+  }, [initialDepositAsset]);
+
+  useEffect(() => {
+    if (isDeposited) {
+      handleNext();
+    }
+    // eslint-disable-next-line
+  }, [isDeposited]);
 
   return (
     <Space
@@ -143,7 +192,7 @@ export default function DepositAsset(props) {
         <Select
           style={{ minWidth: "200px" }}
           value={depositAsset === "native" ? "" : depositAsset}
-          onChange={handleSelect}
+          onChange={(value) => setDepositAsset(value)}
           disabled={isApproved}
         >
           {chainId === "0x2a" && (
@@ -173,19 +222,21 @@ export default function DepositAsset(props) {
         disabled={disableButton}
         onClick={() => {
           if (isApproved) {
-            runDeposit({ onSuccess: () => handleNext() });
+            runGetTokenAllowance({
+              onSuccess: (result) => {
+                const { allowance } = result || {};
+                if (parseInt(allowance) === parseInt(depositAmount)) {
+                  runDeposit({
+                    onSuccess: () => setIsDeposited(true),
+                  });
+                } else {
+                  alert("Wait for a moment for the ERC20 Approval!");
+                }
+              },
+            });
           } else {
             runApprove({
-              onSuccess: () => {
-                runGetTokenAllowance({
-                  onSuccess: (result) => {
-                    const { allowance } = result || {};
-                    if (parseInt(allowance) === parseInt(depositAmount)) {
-                      setIsApproved(true);
-                    }
-                  },
-                });
-              },
+              onSuccess: () => setIsApproved(true),
             });
           }
         }}

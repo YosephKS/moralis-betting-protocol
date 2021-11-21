@@ -56,18 +56,19 @@ const App = () => {
     useMoralis();
   const defaultSelectedKey = useMemo(() => {
     switch (window?.location?.pathname) {
-      case "/dashboard":
-        return "dashboard";
       case "/faucet":
         return "faucet";
       case "/bets":
         return "bets";
       case "/holdings":
         return "holdings";
+      case "/dashboard":
+        return "dashboard";
       default:
         return "";
     }
-  }, []);
+    // eslint-disable-next-line
+  }, [window.location, isAuthenticated]);
 
   useEffect(() => {
     if (
@@ -137,8 +138,8 @@ const App = () => {
                   </Route>
                 </>
               )}
-              <Route path="/nonauthenticated">
-                <>Please login using the "Authenticate" button</>
+              <Route>
+                <>Page Not Found 404</>
               </Route>
             </Switch>
           </div>

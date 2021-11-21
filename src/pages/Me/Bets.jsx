@@ -1,24 +1,28 @@
 import React, { useMemo, useState } from "react";
 import { Typography, Row, Col, Button } from "antd";
 import { useMoralis, useMoralisQuery } from "react-moralis";
-import GameCard from "../../components/GameCard";
-import GameModal from "../../components/GameModal";
+import GameCard from "components/GameCard";
+import GameModal from "components/GameModal";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
+import database from "list/database.json";
 
 export default function Bets() {
   const [visible, setVisible] = useState(false);
   const { isInitialized } = useMoralis();
-  const { walletAddress } = useMoralisDapp();
+  const { walletAddress, chainId } = useMoralisDapp();
   const { data } = useMoralisQuery(
-    "BettingGameCreatedKovan",
+    database[chainId]?.bettingGameCreated ?? "BettingGameCreatedKovan",
     (query) =>
-      query.equalTo("creator", walletAddress).descending("bettingGameId"),
-    [walletAddress, isInitialized],
-    {
-      live: true,
-    }
+      query
+        .equalTo("creator", walletAddress)
+        .equalTo("confirmed", true)
+        .descending("createdAt"),
+    [walletAddress, isInitialized, chainId]
   );
 
+  /**
+   * @description Formatting Betting Game data for UI rendering
+   */
   const bettingGameData = useMemo(() => {
     return data.map((d) => {
       const { attributes } = d || {};

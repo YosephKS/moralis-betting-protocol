@@ -30,8 +30,12 @@ export default function BurnToken(props) {
   const { abi: bettingGameRegistryABI } = BettingGameRegistryABI;
   const { abi: bettingGameABI } = BettingGameABI;
   const [isApproved, setIsApproved] = useState(false);
+  const [isBurnt, setIsBurnt] = useState(false);
   const [transactionHash, setTransactionHash] = useState();
 
+  /**
+   * @description Get token allowance to verify existing token allowance before burning token
+   */
   const {
     fetch: runGetTokenAllowance,
     isLoading: isGettingTokenAllowanceLoading,
@@ -39,7 +43,9 @@ export default function BurnToken(props) {
   } = useMoralisWeb3ApiCall(Web3Api.token.getTokenAllowance, {
     chain: chainId,
     owner_address: walletAddress,
-    spender_address: deployedContracts[chainId].bettingGameRegistry,
+    spender_address: isCreator
+      ? deployedContracts[chainId].bettingGameRegistry
+      : bettingGameAddress,
     address: deployedContracts[chainId].erc20Basic,
   });
 
@@ -53,10 +59,7 @@ export default function BurnToken(props) {
   } = useMoralisQuery(
     database[chainId]?.bettingGameCreated,
     (query) => query.equalTo("transaction_hash", transactionHash),
-    [transactionHash],
-    {
-      live: true,
-    }
+    [transactionHash, chainId]
   );
 
   /**
@@ -138,7 +141,9 @@ export default function BurnToken(props) {
     if (
       bettingGameData &&
       bettingGameData?.length === 1 &&
-      bettingGameAddress === ""
+      bettingGameAddress === "" &&
+      isBurnt &&
+      isCreator
     ) {
       const { attributes } = bettingGameData[0];
       const { bettingGameAddress: res } = attributes;
@@ -146,7 +151,14 @@ export default function BurnToken(props) {
       handleNext();
     }
     // eslint-disable-next-line
-  }, [bettingGameData, bettingGameAddress]);
+  }, [bettingGameData, bettingGameAddress, isBurnt]);
+
+  useEffect(() => {
+    if (isBurnt && !isCreator) {
+      handleNext();
+    }
+    // eslint-disable-next-line
+  }, [isBurnt]);
 
   return (
     <Space direction="vertical" size="middle" style={{ fontSize: "16px" }}>
@@ -171,32 +183,34 @@ export default function BurnToken(props) {
         disabled={disableButton}
         onClick={() => {
           if (isApproved) {
-            if (isCreator) {
-              runCreateGame({
-                onSuccess: (result) => {
-                  const { transactionHash } = result;
-                  setTransactionHash(transactionHash);
-                },
-              });
-            } else {
-              runChallenge({
-                onSuccess: () => handleNext(),
-              });
-            }
+            runGetTokenAllowance({
+              onSuccess: (result) => {
+                const { allowance } = result || {};
+                if (
+                  parseInt(allowance) ===
+                  parseInt(Moralis.Units.Token(0.01 * sides, 18))
+                ) {
+                  if (isCreator) {
+                    runCreateGame({
+                      onSuccess: (result) => {
+                        const { transactionHash } = result;
+                        setTransactionHash(transactionHash);
+                        setIsBurnt(true);
+                      },
+                    });
+                  } else {
+                    runChallenge({
+                      onSuccess: () => setIsBurnt(true),
+                    });
+                  }
+                } else {
+                  alert("Wait for a moment for the ERC20 Approval!");
+                }
+              },
+            });
           } else {
             runApprove({
-              onSuccess: () =>
-                runGetTokenAllowance({
-                  onSuccess: (result) => {
-                    const { allowance } = result || {};
-                    if (
-                      parseInt(allowance) ===
-                      parseInt(Moralis.Units.Token(0.01 * sides, 18))
-                    ) {
-                      setIsApproved(true);
-                    }
-                  },
-                }),
+              onSuccess: () => setIsApproved(true),
             });
           }
         }}

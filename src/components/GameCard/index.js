@@ -1,18 +1,31 @@
 import React, { useMemo, useEffect } from "react";
 import { Card, Typography, Button, Space, Skeleton } from "antd";
+import {
+  useMoralis,
+  useMoralisWeb3Api,
+  useMoralisWeb3ApiCall,
+} from "react-moralis";
 import moment from "moment";
 import { getEllipsisTxt } from "helpers/formatters";
 import { useWeb3Contract } from "hooks/useWeb3Contract";
-import BettingGameABI from "../../contracts/BettingGame.json";
+import BettingGameABI from "contracts/BettingGame.json";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { networkConfigs } from "helpers/networks";
-import erc20TokenAddress from "../../list/erc20TokenAddress.json";
 import isZeroAddress from "helpers/validators";
 
 export default function CardIndex(props) {
   const { cardTitle, handleChallenge } = props;
+  const { isInitialized, isAuthenticated } = useMoralis();
   const { walletAddress, chainId } = useMoralisDapp();
+  const Web3Api = useMoralisWeb3Api();
   const { abi } = BettingGameABI;
+
+  const {
+    fetch: runGetTokenMetadata,
+    data: getTokenMetadata,
+    isLoading: isGettingTokenMetadataLoading,
+    isFetching: isGettingTokenMetadataFetching,
+  } = useMoralisWeb3ApiCall(Web3Api.token.getTokenMetadata);
 
   /**
    * @description Get Betting Game Info Details to be displayed
@@ -44,8 +57,17 @@ export default function CardIndex(props) {
   });
 
   const isFetching = useMemo(
-    () => isGetBettingGameLoading || isGetBettingGameRunning,
-    [isGetBettingGameLoading, isGetBettingGameRunning]
+    () =>
+      isGetBettingGameLoading ||
+      isGetBettingGameRunning ||
+      isGettingTokenMetadataFetching ||
+      isGettingTokenMetadataLoading,
+    [
+      isGetBettingGameLoading,
+      isGetBettingGameRunning,
+      isGettingTokenMetadataLoading,
+      isGettingTokenMetadataFetching,
+    ]
   );
 
   const isContractResponseValid = useMemo(
@@ -87,11 +109,20 @@ export default function CardIndex(props) {
   );
 
   useEffect(() => {
-    if (cardTitle) {
+    if (cardTitle && isInitialized) {
       runGetBettingGameInfo();
     }
     // eslint-disable-next-line
-  }, [cardTitle]);
+  }, [cardTitle, isInitialized, isAuthenticated]);
+
+  useEffect(() => {
+    if (isContractResponseValid && !isZeroAddress(contractResponse[5])) {
+      runGetTokenMetadata({
+        params: { chain: chainId, addresses: contractResponse[5] },
+      });
+    }
+    // eslint-disable-next-line
+  }, [isContractResponseValid, contractResponse]);
 
   return (
     <Card
@@ -101,7 +132,7 @@ export default function CardIndex(props) {
       style={{ marginBottom: "2rem" }}
     >
       <Skeleton loading={isFetching}>
-        {contractResponse && Object.keys(contractResponse).length === 10 ? (
+        {isContractResponseValid && isAuthenticated ? (
           <>
             <div
               style={{
@@ -177,19 +208,15 @@ export default function CardIndex(props) {
                 Deposit Asset
               </Typography.Text>
               <Typography.Text>
-                {!isZeroAddress(contractResponse[5]) ? (
+                {!isZeroAddress(contractResponse[5]) &&
+                getTokenMetadata &&
+                getTokenMetadata?.length === 1 ? (
                   <a
                     target="_blank"
                     rel="noreferrer"
                     href={`${networkConfigs[chainId].blockExplorerUrl}address/${contractResponse[5]}`}
                   >
-                    {Object.keys(erc20TokenAddress[chainId])
-                      .find(
-                        (erc20) =>
-                          erc20TokenAddress[chainId][erc20].toLowerCase() ===
-                          contractResponse[5].toLowerCase()
-                      )
-                      .toUpperCase()}
+                    {getTokenMetadata[0]?.symbol} ({getTokenMetadata[0]?.name})
                   </a>
                 ) : (
                   "-"
@@ -230,7 +257,7 @@ export default function CardIndex(props) {
                 Challenger Roles
               </Typography.Text>
               <Typography.Text>
-                {contractResponse[9] !== "0" ? contractResponse[8] : "-"}
+                {contractResponse[9] !== "0" ? contractResponse[9] : "-"}
               </Typography.Text>
             </div>
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -291,7 +318,18 @@ export default function CardIndex(props) {
             </Space>
           </>
         ) : (
-          <></>
+          <Button
+            size="large"
+            type="default"
+            style={{ width: "100%" }}
+            onClick={() =>
+              window.open(
+                `${networkConfigs[chainId].blockExplorerUrl}address/${cardTitle}`
+              )
+            }
+          >
+            View Details
+          </Button>
         )}
       </Skeleton>
     </Card>

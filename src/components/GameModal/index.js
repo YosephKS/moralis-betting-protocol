@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Steps } from "antd";
-import useNativeTokenPrice from "hooks/useNativeTokenPrice";
 import BurnToken from "./BurnToken";
 import DepositAsset from "./DepositAsset";
 import PlayGame from "./PlayGame";
 import ShowResult from "./ShowResult";
-import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
-import erc20TokenAddress from "../../list/erc20TokenAddress";
-import isZeroAddress from "helpers/validators";
 
 export default function GameModal(props) {
   const { visible, handleClose, isCreator, initialValues } = props;
@@ -16,41 +12,9 @@ export default function GameModal(props) {
     depositTokenAddress: initialDepositAsset,
     bettingGameAddress: initialBettingGameAddress,
   } = initialValues || {};
-  const { chainId } = useMoralisDapp();
-  const { fetchNativeTokenPrice, nativeTokenPrice } = useNativeTokenPrice();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sides, setSides] = useState(1);
-  const [depositAsset, setDepositAsset] = useState("native");
   const [bettingGameAddress, setBettingGameAddress] = useState("");
-
-  const tokenAddressList = {
-    uni: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-    link: "0x514910771af9ca656af840dff83e8264ecf986ca",
-    dai: "0x6b175474e89094c44da98b954eedeac495271d0f",
-  };
-
-  useEffect(() => {
-    if (depositAsset && depositAsset !== "native") {
-      const exchange = () => {
-        switch (chainId) {
-          case "0x2a":
-            return "uniswap-v3";
-          case "0x61":
-            return "pancakeswap-v2";
-          case "0x13881":
-            return "quickswap";
-          default:
-            return "uniswap-v3";
-        }
-      };
-
-      fetchNativeTokenPrice({
-        address: tokenAddressList[depositAsset],
-        exchange: exchange(),
-      });
-    }
-    // eslint-disable-next-line
-  }, [depositAsset]);
 
   useEffect(() => {
     if (initialSides) {
@@ -58,18 +22,6 @@ export default function GameModal(props) {
     }
     // eslint-disable-next-line
   }, [initialSides]);
-
-  useEffect(() => {
-    if (initialDepositAsset && !isZeroAddress(initialDepositAsset)) {
-      const getDepositAsset = Object.keys(erc20TokenAddress[chainId]).find(
-        (erc20) =>
-          erc20TokenAddress[chainId][erc20].toLowerCase() ===
-          initialDepositAsset.toLowerCase()
-      );
-      setDepositAsset(getDepositAsset);
-    }
-    // eslint-disable-next-line
-  }, [initialDepositAsset]);
 
   useEffect(() => {
     if (initialBettingGameAddress) {
@@ -126,11 +78,9 @@ export default function GameModal(props) {
         )}
         {currentIndex === 1 && (
           <DepositAsset
-            depositAsset={depositAsset}
-            nativeTokenPrice={nativeTokenPrice}
+            initialDepositAsset={initialDepositAsset}
             sides={sides}
             isCreator={isCreator}
-            handleSelect={(value) => setDepositAsset(value)}
             handleNext={() => setCurrentIndex((i) => i + 1)}
             bettingGameAddress={initialBettingGameAddress ?? bettingGameAddress}
           />
