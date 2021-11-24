@@ -158,12 +158,18 @@ contract BettingGame is VRFConsumerBase {
         onlyCreator(false)
         onlyEmptyChallenger
         onlyExpiredGame(false)
-    {}
+    {
+        // 1. Burn the tokens
+        // 2, Register the challenger
+        // 3. Emit Challenge Event
+    }
 
     /**
      *  Cancel the created Betting Game
      */
-    function cancel() public onlyCreator(true) {}
+    function cancel() public onlyCreator(true) {
+        // 1. Set the bettingGameStatus to CLOSED
+    }
 
     /**
      * Allow player `msg.sender` to place a bet on the game
@@ -190,7 +196,12 @@ contract BettingGame is VRFConsumerBase {
         address _tokenAddress,
         address _baseAddress,
         address _quoteAddress
-    ) public onlyCreatorAndChallenger onlyExpiredGame(false) {}
+    ) public onlyCreatorAndChallenger onlyExpiredGame(false) {
+        // 1. Get Price Feeds Data from Chainlink
+        // 2. Transfer ERC20 token from user to the `BettingGame` contract
+        // 3. Set Deposit Token Address when it is empty
+        // 4. Emit Deposit event
+    }
 
     /**
      * Handle creator and challenger ERC20 token withdrawal after both have played
@@ -201,5 +212,9 @@ contract BettingGame is VRFConsumerBase {
         onlyExpiredGame(true)
         onlyWinner
         onlyNotWithdrawn
-    {}
+    {
+        // 1. Transfer the depositted asset to the winner
+        // 2. Emit Withdraw event
+        // 3. Set `isWithdrawn` to false
+    }
 }
