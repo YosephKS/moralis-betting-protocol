@@ -151,7 +151,7 @@ contract BettingGame is VRFConsumerBase {
     {}
 
     /**
-     * Allow `_msgSend` address to register as a challenger
+     * Allow `msg.sender` address to register as a challenger
      */
     function challenge()
         public
@@ -166,7 +166,7 @@ contract BettingGame is VRFConsumerBase {
     function cancel() public onlyCreator(true) {}
 
     /**
-     * Allow player `_msgSend` to place a bet on the game
+     * Allow player `msg.sender` to place a bet on the game
      */
     function play()
         public
