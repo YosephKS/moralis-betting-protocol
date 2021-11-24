@@ -148,20 +148,7 @@ contract BettingGame is VRFConsumerBase {
             uint256,
             uint256
         )
-    {
-        return (
-            creator,
-            challenger,
-            sides,
-            status,
-            expiryTime,
-            depositTokenAddress,
-            winner,
-            isWithdrawn,
-            playerBetRecordRegistry[creator],
-            playerBetRecordRegistry[challenger]
-        );
-    }
+    {}
 
     /**
      * Allow `_msgSend` address to register as a challenger
@@ -171,22 +158,12 @@ contract BettingGame is VRFConsumerBase {
         onlyCreator(false)
         onlyEmptyChallenger
         onlyExpiredGame(false)
-    {
-        IERC20Burnable nativeToken = IERC20Burnable(nativeTokenAddress);
-        uint256 burnPrice = SafeMath.mul(0.01 * 10**18, sides);
-        nativeToken.burnFrom(msg.sender, burnPrice);
-
-        challenger = msg.sender;
-
-        emit Challenge(msg.sender);
-    }
+    {}
 
     /**
      *  Cancel the created Betting Game
      */
-    function cancel() public onlyCreator(true) {
-        status = BettingGameStatus.CLOSED;
-    }
+    function cancel() public onlyCreator(true) {}
 
     /**
      * Allow player `_msgSend` to place a bet on the game
@@ -196,14 +173,7 @@ contract BettingGame is VRFConsumerBase {
         onlyCreatorAndChallenger
         onlyExpiredGame(false)
         returns (bytes32 requestId)
-    {
-        require(
-            LINK.balanceOf(address(this)) >= fee,
-            "Not enough LINK - fill contract with faucet"
-        );
-        requestId = requestRandomness(keyHash, fee);
-        requestIdToAddressRegistry[requestId] = msg.sender;
-    }
+    {}
 
     /**
      * This is a function overriden from Chainlink VRF contract to get the randomness result
@@ -211,32 +181,7 @@ contract BettingGame is VRFConsumerBase {
     function fulfillRandomness(bytes32 requestId, uint256 randomness)
         internal
         override
-    {
-        address playerAddress = requestIdToAddressRegistry[requestId];
-        uint256 randomResult = (randomness % sides) + 1;
-        playerBetRecordRegistry[playerAddress] = randomResult;
-
-        emit Play(playerAddress, randomResult);
-
-        if (
-            playerBetRecordRegistry[creator] != 0 &&
-            playerBetRecordRegistry[challenger] != 0
-        ) {
-            // Close the game
-            status = BettingGameStatus.CLOSED;
-
-            if (
-                (playerBetRecordRegistry[creator] +
-                    playerBetRecordRegistry[challenger]) %
-                    2 ==
-                0
-            ) {
-                winner = creator;
-            } else {
-                winner = challenger;
-            }
-        }
-    }
+    {}
 
     /**
      * Handle depositing ERC20 token to the `BettingGame` contract
@@ -245,31 +190,7 @@ contract BettingGame is VRFConsumerBase {
         address _tokenAddress,
         address _baseAddress,
         address _quoteAddress
-    ) public onlyCreatorAndChallenger onlyExpiredGame(false) {
-        IPriceConverter priceFeed = IPriceConverter(priceConverterAddress);
-
-        // 1. Get Price Feeds Data from Chainlink
-        int256 price = priceFeed.getDerivedPrice(
-            _baseAddress,
-            _quoteAddress,
-            18
-        );
-
-        // 2. Transfer ERC20 token from user to the `BettingGame` contract
-        IERC20 token = IERC20(_tokenAddress);
-        uint256 tokenAmount = SafeMath.div(
-            SafeMath.mul(uint256(price), sides),
-            100
-        );
-        token.safeTransferFrom(msg.sender, address(this), tokenAmount);
-
-        // 3. Set Deposit Token Address when it is empty
-        if (depositTokenAddress == address(0)) {
-            depositTokenAddress = _tokenAddress;
-        }
-
-        emit Deposit(_tokenAddress, tokenAmount);
-    }
+    ) public onlyCreatorAndChallenger onlyExpiredGame(false) {}
 
     /**
      * Handle creator and challenger ERC20 token withdrawal after both have played
@@ -280,13 +201,5 @@ contract BettingGame is VRFConsumerBase {
         onlyExpiredGame(true)
         onlyWinner
         onlyNotWithdrawn
-    {
-        IERC20 token = IERC20(depositTokenAddress);
-        uint256 tokenAmount = token.balanceOf(address(this));
-        token.safeTransfer(msg.sender, tokenAmount);
-
-        emit Withdraw(msg.sender, depositTokenAddress, tokenAmount);
-
-        isWithdrawn = true;
-    }
+    {}
 }
